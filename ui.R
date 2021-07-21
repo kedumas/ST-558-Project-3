@@ -40,6 +40,7 @@ dashboardPage(
             tabItem(tabName = "Data",
                     h2("Data"),
                     mainPanel(
+                        actionButton("saveData", "Save Current Data Set"),
                         dataTableOutput("data")
                     )
             ),
@@ -47,7 +48,8 @@ dashboardPage(
             tabItem(tabName = "DataExploration",
                     h2("Data Exploration Fun"),
                     mainPanel(
-                        
+                        actionButton("savePlot", "Save Selected Plots"),
+                        plotOutput("corPlot")
                     )
             ),
             # Modeling page content
