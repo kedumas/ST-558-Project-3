@@ -2,7 +2,7 @@ library(shinydashboard)
 
 dashboardPage(
     skin = "red",
-    dashboardHeader(title = "Placeholder"),
+    dashboardHeader(title = "Video Game Trends"),
     dashboardSidebar(
         sidebarMenu(
             menuItem("About", tabName = "About", icon = icon("question")),
@@ -19,11 +19,13 @@ dashboardPage(
                     h2("About Page"),
                     mainPanel(
                       h3("About this App"),
+                      p("This app will allow users to explore the sales and ratings data for different video games. The ratings are from Metacritic and the sales data is from vgchartz."), 
+                      p("The goal is to see if there are any trends or correlations between ratings, sales and publisher and platform."),
                       br(),
                       h3("About the Data"),
-                      h4("The Pokemon data set was taken from", 
-                         a(href="https://www.kaggle.com/mariotormo/complete-pokemon-dataset-updated-090420", "Kaggle"),
-                         "and is called ", em("The Complete Pokemon Dataset")),
+                      h4("This video game data set was taken from", 
+                         a(href="https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings", "Kaggle"),
+                         "and is called ", em("Video Game Sales with Ratings")),
                       p("Specifically, the dataset used was version 6 and identified here as Update_04.21"),
                       br(),
                       h3("About the Other Pages"),
@@ -38,7 +40,7 @@ dashboardPage(
             tabItem(tabName = "Data",
                     h2("Data"),
                     mainPanel(
-                        
+                        dataTableOutput("data")
                     )
             ),
             # Data Exploration page content
