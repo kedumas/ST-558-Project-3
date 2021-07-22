@@ -19,20 +19,30 @@ dashboardPage(
                     h2("About Page"),
                     mainPanel(
                       h3("About this App"),
-                      p("This app will allow users to explore the sales and ratings data for different video games. The ratings are from Metacritic and the sales data is from vgchartz."), 
-                      p("The goal is to see if there are any trends or correlations between ratings, sales and publisher and platform."),
+                      p("This app will allow users to explore the sales and ratings data for different video games. The ratings are from Metacritic and the sales data is from vgchartz.",
+                        "The goal is to see if there are any trends or correlations between ratings, sales and publisher and platform."),
                       br(),
                       h3("About the Data"),
                       h4("This video game data set was taken from", 
                          a(href="https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings", "Kaggle"),
                          "and is called ", em("Video Game Sales with Ratings")),
-                      p("Specifically, the dataset used was version 6 and identified here as Update_04.21"),
+                      p("There are 16 variables with data ranging from game name, to year released, to sales data to ratings.", 
+                        "There are 6,947 different observations in this set for games that range the gambit of genres."),
+                      p(""),
                       br(),
                       h3("About the Other Pages"),
-                      h4("There are three other pages to explore in this shiny app"),
                       h4("Data"),
-                      p("This page allows the user to look through and filter or subset the data as wanted."),
-                      p("It also allows the user to download a .csv of either the full dataset or the filtered/subsetted data that they chose.")
+                      p("This page allows the user to look through and filter or subset the data as wanted.", 
+                        "It also allows the user to download a .csv of either the full dataset or the filtered/subsetted data that they chose."),
+                      br(),
+                      h4("Data Exploration"),
+                      p("This page allows for exploratory analysis of the data, including the creation of different plots and summaries.", 
+                        "There is also the ability to download selected plots."),
+                      br(),
+                      h4("Modeling"),
+                      p("The Modeling page has three different tabs: Information, Fitting and Prediction. The Information tab explains the models used, ", 
+                        "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response.")
+                      
                       # img(src = "my_image.png", height = 72, width = 72)
                     )
             ),
@@ -41,7 +51,7 @@ dashboardPage(
                     h2("Data"),
                     mainPanel(
                         actionButton("saveData", "Save Current Data Set"),
-                        dataTableOutput("data")
+                        dataTableOutput("allData")
                     )
             ),
             # Data Exploration page content
@@ -49,6 +59,7 @@ dashboardPage(
                     h2("Data Exploration Fun"),
                     mainPanel(
                         actionButton("savePlot", "Save Selected Plots"),
+                        checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = vars, selected = vars, inline = TRUE),
                         plotOutput("corPlot")
                     )
             ),

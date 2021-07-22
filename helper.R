@@ -17,4 +17,4 @@ games["User_Score"] <- User_Score
 
 # Data for correlation plot
 corGames <- games %>% select(where(is.numeric), -Global_Sales) %>% cor()
-
+vars <- colnames(corGames)
