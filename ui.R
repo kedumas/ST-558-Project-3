@@ -51,15 +51,24 @@ dashboardPage(
                     h2("Data"),
                     mainPanel(
                         actionButton("saveData", "Save Current Data Set"),
-                        dataTableOutput("allData")
+                        dataTableOutput("allData", width = "1000px")
                     )
             ),
             # Data Exploration page content
             tabItem(tabName = "DataExploration",
                     h2("Data Exploration Fun"),
                     mainPanel(
+                        
+                        # Action button to save desired plots
                         actionButton("savePlot", "Save Selected Plots"),
-                        checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = vars, selected = vars, inline = TRUE),
+                        
+                        # Summary statistics of the data set
+                        h3("Summary Statistics"),
+                        verbatimTextOutput("sumData"),
+                        
+                        # Check boxes for user input and the corresponding correlation plot
+                        h3("Correlation Plot"), 
+                        checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = corVars, selected = corVars, inline = TRUE),
                         plotOutput("corPlot")
                     )
             ),

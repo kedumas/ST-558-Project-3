@@ -8,16 +8,21 @@ source("helper.R")
 
 function(input, output, session) { 
   
-  # Table output for the Data Page. Defaults are 5 observations per page and the table is scrollable.
+  # Table output for the Data Page. Defaults are 10 observations per page and the table is scrollable.
   output$allData <- renderDataTable(
     games, 
     options = list(
-      pageLength = 5,
+      pageLength = 10,
       scrollX = TRUE,
-      ordering = TRUE,
-      width = "80%"
+      scrollY = "500px",
+      ordering = TRUE
       )
   )
+  
+  # Summary data of the data set
+  output$sumData <- renderPrint({
+    summary(games) %>% kable()
+  })
   
   # Correlation plot with inputs selected byt he user. Default is all variables included.
   output$corPlot <- renderPlot(
