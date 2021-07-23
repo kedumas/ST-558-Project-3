@@ -50,7 +50,7 @@ dashboardPage(
             tabItem(tabName = "Data",
                     h2("Data"),
                     mainPanel(
-                        actionButton("saveData", "Save Current Data Set"),
+                        downloadButton("saveData", "Save Current Data Set"),
                         dataTableOutput("allData", width = "1000px")
                     )
             ),
@@ -60,16 +60,50 @@ dashboardPage(
                     mainPanel(
                         
                         # Action button to save desired plots
-                        actionButton("savePlot", "Save Selected Plots"),
+                        downloadButton("savePlot", "Download"),
+                        
+                        # 
+                        textInput("filter", "Filter the Data for plot"),
+                        
+                        # 
+                        selectInput("plotSum", "Select the desired plot or summary", choices = dataInputs),
                         
                         # Summary statistics of the data set
-                        h3("Summary Statistics"),
-                        verbatimTextOutput("sumData"),
+                        conditionalPanel(
+                            condition = "input.plotSum == 'Summary Statistics'", 
+                            h3("Summary Statistics"),
+                            checkboxGroupInput("sumOpts", "Variables for the Summary Statistics", choices = allVars, 
+                                               selected = allVars, inline = TRUE),
+                            verbatimTextOutput("sumData")
+                        ),
                         
                         # Check boxes for user input and the corresponding correlation plot
-                        h3("Correlation Plot"), 
-                        checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = corVars, selected = corVars, inline = TRUE),
-                        plotOutput("corPlot")
+                        conditionalPanel(
+                            condition = "input.plotSum == 'Correlation Plot'", 
+                            h3("Correlation Plot"), 
+                            checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = corVars, 
+                                               selected = corVars, inline = TRUE),
+                            plotOutput("corPlot")
+                        ),
+                        
+                        # Barplot
+                        conditionalPanel(
+                            condition = "input.plotSum == 'Barplot'",
+                            h3("Barplot"),
+                            selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars),
+                            plotOutput("bar")
+                        ),
+                        
+                        # Violin Plot
+                        conditionalPanel(
+                            condition = "input.plotSum == 'Violin plot'",
+                        ),
+                        
+                        # Scatterplot
+                        conditionalPanel(
+                            condition = "input.plotSum == 'Scatterplot'",
+                        )
+                        
                     )
             ),
             # Modeling page content

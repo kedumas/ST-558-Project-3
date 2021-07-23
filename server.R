@@ -21,12 +21,29 @@ function(input, output, session) {
   
   # Summary data of the data set
   output$sumData <- renderPrint({
-    summary(games) %>% kable()
+    sumVar <- input$sumOpts
+    games %>% select(sumVar) %>% summary()
   })
   
   # Correlation plot with inputs selected byt he user. Default is all variables included.
   output$corPlot <- renderPlot(
     corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
   )
+  
+  
+  # Barplot of a single variable
+  output$bar <- renderPlot({
+    barVar <- input$facts
+    #if is.null(input$ ) {games %>% filter()} else 
+    ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+  })
+  
+  # Download the selected data set
+  #output$saveData <- downloadHandler(
+  #  filename = "VG_Sales_22Dec2016.csv",
+  #  content = function(file) {
+  #    vroom::vroom_write(, file)
+  #  }
+  #)
 
-    }
+}

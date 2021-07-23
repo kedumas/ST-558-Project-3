@@ -15,10 +15,13 @@ games <- na.omit(games)
 User_Score <- as.numeric(unlist(games["User_Score"]))
 games["User_Score"] <- User_Score
 
-# List of data set variables to use in ui.R
-vars <- colnames(games)
-
-
 # Data for correlation plot
 corGames <- games %>% select(where(is.numeric), -Global_Sales) %>% cor()
+
+# Different ists of data set variables to use in ui.R
+allVars <- colnames(games)
 corVars <- colnames(corGames)
+barVars <- games %>% select(where(is.factor), -c(Publisher, Developer)) %>% colnames()
+
+# Types of plots
+dataInputs <- c("Summary Statistics", "Correlation Plot", "Barplot", "Violin Plot", "Scatterplot")
