@@ -62,10 +62,7 @@ dashboardPage(
                         # Action button to save desired plots
                         downloadButton("savePlot", "Download"),
                         
-                        # 
-                        textInput("filter", "Filter the Data for plot"),
-                        
-                        # 
+                        # Drop down menu for the desired output
                         selectInput("plotSum", "Select the desired plot or summary", choices = dataInputs),
                         
                         # Summary statistics of the data set
@@ -90,6 +87,11 @@ dashboardPage(
                         conditionalPanel(
                             condition = "input.plotSum == 'Barplot'",
                             h3("Barplot"),
+                            
+                            # Options for filtering
+                            selectInput("filtBox", "Filter Observations", choices = 
+                                                list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                     "Developer" = uDevl, "Rating" = uRatg)),
                             selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars),
                             plotOutput("bar")
                         ),
@@ -97,11 +99,34 @@ dashboardPage(
                         # Violin Plot
                         conditionalPanel(
                             condition = "input.plotSum == 'Violin plot'",
+                            h3("Violin Plot"),
+                            
+                            # Options for filtering
+                            selectInput("filtBox", "Filter Observations", choices = 
+                                            list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                 "Developer" = uDevl, "Rating" = uRatg)),
+                            selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]),
+                            selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]),
+                            #selectInput("fVioVar", "Select the 'X' variable", choices = barVars),
+                            plotOutput("violin")
                         ),
                         
                         # Scatterplot
                         conditionalPanel(
                             condition = "input.plotSum == 'Scatterplot'",
+                            h3("Scatterplot"),
+                            fluidRow(box(
+                                # Options for filtering
+                                selectInput("filtBox", "Filter Observations", choices = 
+                                                list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                     "Developer" = uDevl, "Rating" = uRatg)),
+                                #checkboxInput("panel", "Panel?"),
+                                selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]),
+                                selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]),
+                                ),
+                            
+                            box(plotlyOutput("scatter"))
+                            )
                         )
                         
                     )
@@ -113,7 +138,9 @@ dashboardPage(
                         
                         # Output: Tabset with modeling information, fitting and prediction
                         tabsetPanel(type = "tabs",
-                                    tabPanel("Modeling Info", textOutput("text")),
+                                    tabPanel("Modeling Info", textOutput("text"),
+                                             h2("Title"),
+                                             p("Test words!")),
                                     tabPanel("Model Fitting", plotOutput("models")),
                                     tabPanel("Prediction", plotOutput("predict"))
                         )

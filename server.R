@@ -2,6 +2,7 @@ library(shiny)
 library(tidyverse)
 library(DT)
 library(corrplot)
+library(plotly)
 
 # Static code is in the helper.R file
 source("helper.R")
@@ -19,6 +20,12 @@ function(input, output, session) {
       )
   )
   
+  # Filter for plots
+  filtBox <- reactive({
+    
+    
+  })
+  
   # Summary data of the data set
   output$sumData <- renderPrint({
     sumVar <- input$sumOpts
@@ -29,18 +36,77 @@ function(input, output, session) {
   output$corPlot <- renderPlot(
     corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
   )
-  
+  # fGames <- reactive({
+  #   games
+  # })
+  # fGames <- eventReactive(input$actBox1,{
+  #  if(!is.null(input$textBox)){filtObs <- input$textBox}
+  #  if(!is.null(input$filterBox)){filt <- input$filterBox}
+  #  if(!is.null(input$textBox)){fGames <- games %>% filter(filtObs == filt)
+  #    } else fGames <- games
+  #  fGames
+  #  })
   
   # Barplot of a single variable
   output$bar <- renderPlot({
     barVar <- input$facts
-    #if is.null(input$ ) {games %>% filter()} else 
+    #games <- fGames()
+    #if(!is.null(input$textBox)){filtObs <- input$textBox}
+    #if(!is.null(input$filterBox)){filt <- input$filterBox}
+
+    # Filter the data for the plot
     ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+    #if(is.null(input$filterBox)){ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+    #  } else games %>% filter(filt == stfiltObs) %>% ggplot( aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+  })
+  # bar <- reactive({
+  #   barVar <- input$facts
+  #   ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+  # })
+  # 
+  # fGames <- eventReactive(input$actBox1,{
+  #   if(!is.null(input$textBox)){filtObs <- input$textBox}
+  #   if(!is.null(input$filterBox)){filt <- input$filterBox}
+  #   if(!is.null(input$textBox){fGames <- games %>% filter(filtObs == filt)
+  #     } else fGames <- games
+  #   fGames
+  # })
+  # 
+  # output$bar <- renderPlot({
+  #   bar()
+  # })
+  
+  # Violin plot 
+  output$violin <- renderPlot({
+    xVioVar <- input$xVio
+    yVioVar <- input$yVio
+    #fVioVar <- input$fVio
+    
+    # Filter the data for the plot
+    ggplot(games, aes_string(xVioVar, yVioVar)) + geom_violin() + theme_minimal()
+  })
+  
+  # Scatterplot
+
+  output$scatter <- renderPlotly({
+      plot_ly(
+      games, x = ~get(input$xSca), y = ~get(input$ySca),
+      # Hover text:
+      text = ~paste("Game:", Name, "<br>Developer:", Developer)
+    ) 
   })
   
   # Download the selected data set
   #output$saveData <- downloadHandler(
   #  filename = "VG_Sales_22Dec2016.csv",
+  #  content = function(file) {
+  #    vroom::vroom_write(, file)
+  #  }
+  #)
+  
+  # Download the selected summary or plot
+  #output$saveData <- downloadHandler(
+  #  filename = paste0(placeholder, ".csv"),
   #  content = function(file) {
   #    vroom::vroom_write(, file)
   #  }
