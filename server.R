@@ -4,7 +4,8 @@ library(DT)
 library(corrplot)
 library(plotly)
 
-# Static code is in the helper.R file
+# Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
+# easily callable subsets of the variables and variable names. See helper.R for more information.
 source("helper.R")
 
 function(input, output, session) { 
@@ -28,7 +29,8 @@ function(input, output, session) {
     
   })
   
-  # Summary data of the data set
+  # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
+  # summaries shown.
   output$sumData <- renderPrint({
     sumVar <- input$sumOpts
     games %>% select(sumVar) %>% summary()
@@ -38,6 +40,7 @@ function(input, output, session) {
   output$corPlot <- renderPlot(
     corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
   )
+  
   # fGames <- reactive({
   #   games
   # })
@@ -49,7 +52,8 @@ function(input, output, session) {
   #  fGames
   #  })
   
-  # Barplot of a single variable
+  # Barplot of a single variable. Looking only at Platform, Year of Release, Genre, and Rating. Publisher and 
+  # Developer both have over 100 different levels and would not be good for this type of plot. Default is Platform.
   output$bar <- renderPlot({
     barVar <- input$facts
 
@@ -58,24 +62,9 @@ function(input, output, session) {
     #if(is.null(input$filterBox)){ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
     #  } else games %>% filter(filt == stfiltObs) %>% ggplot( aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
   })
-  # bar <- reactive({
-  #   barVar <- input$facts
-  #   ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
-  # })
-  # 
-  # fGames <- eventReactive(input$actBox1,{
-  #   if(!is.null(input$textBox)){filtObs <- input$textBox}
-  #   if(!is.null(input$filterBox)){filt <- input$filterBox}
-  #   if(!is.null(input$textBox){fGames <- games %>% filter(filtObs == filt)
-  #     } else fGames <- games
-  #   fGames
-  # })
-  # 
-  # output$bar <- renderPlot({
-  #   bar()
-  # })
-  
-  # Violin plot 
+
+  # Violin plot looking at the same variables as the barplot compared to all the numeric variables. 
+  # Default is Platform by NA_Sales.
   output$violin <- renderPlot({
     xVioVar <- input$xVio
     yVioVar <- input$yVio
@@ -85,8 +74,11 @@ function(input, output, session) {
     ggplot(games, aes_string(xVioVar, yVioVar)) + geom_violin() + coord_flip() + theme_minimal()
   })
   
-  # Scatterplot
+  # Scatterplot looking at all the numeric variables compared to each other pairwise as the user specifies. 
+  # Default is NA_Sales by Critic_Count.
   output$scatter <- renderPlotly({
+    # Ggplot for a scatterplot is fit, then converted to plotly for interactivity. The logic behind converting to 
+    # plotly after using ggplot is so that the x and y axis labels will appear correctly and keep the interactivity.
     p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
     ggplotly(p, tooltip = c("x", "y", "label"))
       })
@@ -98,11 +90,19 @@ function(input, output, session) {
                                  type = "warning", duration = 7)}
   )
   
-  # Dynamic UI for automatically displaying all valid predictor variables based on the response variable
+  # Dynamic UI for automatically displaying all valid predictor variables based on the response variable selected.
+  # Both observe chunks are used, the first for when the user initially changes the response variable and the second
+  # for when the user changes back to NA_Sales, the initial value.
   observe({
-    x <- Position(function(x) x == input$resp, allVars)
-    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -x)])}#, get(input$resp)))))
+    # Determine the position of the response name within allVars vector 
+    newResp <- Position(function(x) x == input$resp, allVars)
+    # Update the checkboxes by removing the selected response variable as identified by Position()
+    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)])}
     })
+  observe({
+    # Update the checkboxes if the user reselected NA_Sales
+    if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)])}
+  })
 
   # Download Functionality
   # Download the selected data set

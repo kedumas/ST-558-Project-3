@@ -23,6 +23,8 @@ allVars <- colnames(games)
 corVars <- colnames(corGames)
 numVars <- games %>% select(where(is.numeric)) %>% colnames()
 barVars <- games %>% select(where(is.factor), -c(Publisher, Developer)) %>% colnames()
+
+# Unique values of selected variables for use in selectInput in ui.R
 uPlat <- unique(games$Platform)
 uYear <- unique(games$Year_of_Release)
 uGenr <- unique(games$Genre)
