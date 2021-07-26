@@ -22,15 +22,19 @@ dashboardPage(
                     mainPanel(
                       h3("About this App"),
                       p("This app will allow users to explore the sales and ratings data for different video games. The ratings are from Metacritic and the sales data is from vgchartz.",
-                        "The goal is to see if there are any trends or correlations between ratings, sales and publisher and platform."),
+                        "The goal is to see if there are any trends or correlations between ratings, sales and publisher/Developer and platform."),
                       br(),
                       h3("About the Data"),
                       h4("This video game data set was taken from", 
                          a(href="https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings", "Kaggle"),
                          "and is called ", em("Video Game Sales with Ratings")),
                       p("There are 16 variables with data ranging from game name, to year released, to sales data to ratings.", 
-                        "There are 6,947 different observations in this set for games that range the gambit of genres."),
-                      p(""),
+                        "There are 6,947 different observations in this set for games that range the gambit of genres.",
+                        "Many publishers and developers have the same name, but not all. For example, Nintendo is both a publisher",
+                        "and distributer, but Take-Two Interactive is a publisher for the developer Rockstar North.",
+                        "In this example, Nintendo can also be a publisher for other developers such as Game Arts."),
+                      img(src = "psvita.png", height = 300, width = 300),
+                      p("This is an image of the Playstation Vita, from", a(href="https://kotaku.com/fans-are-finally-coming-to-terms-with-the-vitas-death-1833298145", "Kotaku.com.")),
                       br(),
                       h3("About the Other Pages"),
                       h4("Data"),
@@ -43,11 +47,10 @@ dashboardPage(
                       br(),
                       h4("Modeling"),
                       p("The Modeling page has three different tabs: Information, Fitting and Prediction. The Information tab explains the models used, ", 
-                        "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response."),
-                     
-                      # img(src = "my_image.png", height = 72, width = 72)
-                    )
+                        "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response.")
+                     )
             ),
+            
             # Data page content
             tabItem(tabName = "Data",
                     h2("Data"),
