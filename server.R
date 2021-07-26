@@ -3,6 +3,7 @@ library(tidyverse)
 library(DT)
 library(corrplot)
 library(plotly)
+library(caret)
 
 # Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
 # easily callable subsets of the variables and variable names. See helper.R for more information.
@@ -41,47 +42,62 @@ function(input, output, session) {
     corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
   )
   
-  # fGames <- reactive({
-  #   games
-  # })
-  # fGames <- eventReactive(input$actBox1,{
-  #  if(!is.null(input$textBox)){filtObs <- input$textBox}
-  #  if(!is.null(input$filterBox)){filt <- input$filterBox}
-  #  if(!is.null(input$textBox)){fGames <- games %>% filter(filtObs == filt)
-  #    } else fGames <- games
-  #  fGames
-  #  })
+  # Created filter if else flows to determine filtering for bar, violin and scatterplots.
+  bGames <- reactive({
+    if(input$filtBar == " ") {bGames <- games
+    } else if(input$filtBar %in% games$Platform) {bGames <- games %>% filter(Platform == input$filtBar)
+    } else if(input$filtBar %in% games$Year_of_Release) {bGames <- games %>% filter(Year_of_Release == input$filtBar) 
+    } else if(input$filtBar %in% games$Genre) {bGames <- games %>% filter(Genre == input$filtBar)
+    } else if(input$filtBar %in% games$Developer) {bGames <- games %>% filter(Developer == input$filtBar) 
+    } else if(input$filtBar %in% games$Publisher) {bGames <- games %>% filter(Publisher == input$filtBar)
+    } else bGames <- games %>% filter(Rating == input$filtBar)
+    bGames
+  })
+  
+  vGames <- reactive({
+    if(input$filtVio == " ") {vGames <- games
+    } else if(input$filtVio %in% games$Platform) {vGames <- games %>% filter(Platform == input$filtVio)
+    } else if(input$filtVio %in% games$Year_of_Release) {vGames <- games %>% filter(Year_of_Release == input$filtVio) 
+    } else if(input$filtVio %in% games$Genre) {vGames <- games %>% filter(Genre == input$filtVio)
+    } else if(input$filtVio %in% games$Developer) {vGames <- games %>% filter(Developer == input$filtVio) 
+    } else if(input$filtVio %in% games$Publisher) {vGames <- games %>% filter(Publisher == input$filtVio)
+    } else vGames <- games %>% filter(Rating == input$filtVio)
+    vGames
+  })
+  
+  sGames <- reactive({
+    if(input$filtSca == " ") {sGames <- games
+    } else if(input$filtSca %in% games$Platform) {sGames <- games %>% filter(Platform == input$filtSca)
+    } else if(input$filtSca %in% games$Year_of_Release) {sGames <- games %>% filter(Year_of_Release == input$filtSca) 
+    } else if(input$filtSca %in% games$Genre) {sGames <- games %>% filter(Genre == input$filtSca)
+    } else if(input$filtSca %in% games$Developer) {sGames <- games %>% filter(Developer == input$filtSca) 
+    } else if(input$filtSca %in% games$Publisher) {sGames <- games %>% filter(Publisher == input$filtSca)
+    } else sGames <- games %>% filter(Rating == input$filtSca)
+    sGames
+  })
   
   # Barplot of a single variable. Looking only at Platform, Year of Release, Genre, and Rating. Publisher and 
   # Developer both have over 100 different levels and would not be good for this type of plot. Default is Platform.
   output$bar <- renderPlot({
-    barVar <- input$facts
-
-    # Filter the data for the plot
-    ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
-    #if(is.null(input$filterBox)){ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
-    #  } else games %>% filter(filt == stfiltObs) %>% ggplot( aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
+    games <- bGames()
+    ggplot(games, aes_string(input$facts)) + geom_bar(aes_string(fill = input$facts)) + coord_flip() + theme_minimal()
   })
 
   # Violin plot looking at the same variables as the barplot compared to all the numeric variables. 
   # Default is Platform by NA_Sales.
   output$violin <- renderPlot({
-    xVioVar <- input$xVio
-    yVioVar <- input$yVio
-    #fVioVar <- input$fVio
-    
-    # Filter the data for the plot
-    ggplot(games, aes_string(xVioVar, yVioVar)) + geom_violin() + coord_flip() + theme_minimal()
+    games <- vGames()
+    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal()
   })
   
   # Scatterplot looking at all the numeric variables compared to each other pairwise as the user specifies. 
   # Default is NA_Sales by Critic_Count.
   output$scatter <- renderPlotly({
-    # Ggplot for a scatterplot is fit, then converted to plotly for interactivity. The logic behind converting to 
-    # plotly after using ggplot is so that the x and y axis labels will appear correctly and keep the interactivity.
+    games <- sGames()
+    # Ggplot for a scatterplot is fit, then converted to plotly for interactivity.
     p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
     ggplotly(p, tooltip = c("x", "y", "label"))
-      })
+  })
 
   # Model Page Setup  
   # Large factor (over 100 factors!) variable warning
@@ -102,6 +118,23 @@ function(input, output, session) {
   observe({
     # Update the checkboxes if the user reselected NA_Sales
     if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)])}
+  })
+  train <- reactive({
+    set.seed(13)
+    trainIndex <- order(sample(nrow(games) * noquote(input$split)/100))
+    train <- games[trainIndex,]
+  })
+  
+  mlr <- reactive({
+    trainData <- train()
+    y <- trainData %>% select(noquote(input$resp))
+    x <- trainData %>% select(noquote(input$pred))
+    form <- reformulate(x, y)
+    lm(form, data = trainData)
+  })
+  
+  output$sumModel <- renderPrint({
+    summary(mlr())
   })
 
   # Download Functionality

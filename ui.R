@@ -1,4 +1,5 @@
 library(shinydashboard)
+library(DT)
 library(plotly)
 
 dashboardPage(
@@ -91,9 +92,9 @@ dashboardPage(
                             
                             # Options for filtering
                             selectInput("filtBar", "Filter Observations", choices = 
-                                                list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Developer" = uDevl, "Rating" = uRatg)),
-                            selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars),
+                            selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars, selected = barVars[2]),
                             plotOutput("bar", width = "100%")
                         ),
                         
@@ -104,11 +105,10 @@ dashboardPage(
                             fluidRow(box(
                                 # Options for filtering
                                 selectInput("filtVio", "Filter Observations", choices = 
-                                            list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                            list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                  "Developer" = uDevl, "Rating" = uRatg)), width = 4),
                                 box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]), width = 4),
                                 box(selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]), width = 4),
-                                #selectInput("fVioVar", "Select the 'X' variable", choices = barVars),
                                 box(plotOutput("violin"), width = 12)
                             )
                         ),
@@ -120,9 +120,8 @@ dashboardPage(
                             fluidRow(box(
                                 # Options for filtering
                                 selectInput("filtSca", "Filter Observations", choices = 
-                                                list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Developer" = uDevl, "Rating" = uRatg)), width = 4),
-                                #checkboxInput("panel", "Panel?"),
                                 box(selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]), width = 4),
                                 box(selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]), width = 4),
                                 ),
@@ -161,7 +160,7 @@ dashboardPage(
                                                           selectInput("resp", "Response Variable", choices = numVars, selected = numVars[1]),
                                                           checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:16)]),
                                                       width = 3)),
-                                                      box(plotOutput("models"), width = 9)),
+                                             box(verbatimTextOutput("sumModel"))),
                                     tabPanel("Prediction", 
                                              plotOutput("predict"))
                         )
