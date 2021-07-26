@@ -9,6 +9,7 @@ source("helper.R")
 
 function(input, output, session) { 
   
+  # Data Page Setup
   # Table output for the Data Page. Defaults are 10 observations per page and the table is scrollable.
   output$allData <- renderDataTable(
     games, 
@@ -20,6 +21,7 @@ function(input, output, session) {
       )
   )
   
+  # Data Manipulation Page Setup
   # Filter for plots
   filtBox <- reactive({
     
@@ -88,10 +90,21 @@ function(input, output, session) {
     p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
     ggplotly(p, tooltip = c("x", "y", "label"))
       })
-  
-  # Model Setup
 
+  # Model Page Setup  
+  # Large factor (over 100 factors!) variable warning
+  observeEvent(
+    input$run, {showNotification("If Publisher or Developer has been selected, the output will be too long to fit the page.", 
+                                 type = "warning", duration = 7)}
+  )
   
+  # Dynamic UI for automatically displaying all valid predictor variables based on the response variable
+  observe({
+    x <- Position(function(x) x == input$resp, allVars)
+    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -x)])}#, get(input$resp)))))
+    })
+
+  # Download Functionality
   # Download the selected data set
   #output$saveData <- downloadHandler(
   #  filename = "VG_Sales_22Dec2016.csv",

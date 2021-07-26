@@ -1,4 +1,5 @@
 library(shinydashboard)
+library(plotly)
 
 dashboardPage(
     skin = "red",
@@ -89,11 +90,11 @@ dashboardPage(
                             h3("Barplot"),
                             
                             # Options for filtering
-                            selectInput("filtBox", "Filter Observations", choices = 
+                            selectInput("filtBar", "Filter Observations", choices = 
                                                 list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Developer" = uDevl, "Rating" = uRatg)),
                             selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars),
-                            plotOutput("bar")
+                            plotOutput("bar", width = "100%")
                         ),
                         
                         # Violin Plot
@@ -102,7 +103,7 @@ dashboardPage(
                             h3("Violin Plot"),
                             fluidRow(box(
                                 # Options for filtering
-                                selectInput("filtBox", "Filter Observations", choices = 
+                                selectInput("filtVio", "Filter Observations", choices = 
                                             list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                  "Developer" = uDevl, "Rating" = uRatg)), width = 4),
                                 box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]), width = 4),
@@ -118,7 +119,7 @@ dashboardPage(
                             h3("Scatterplot"),
                             fluidRow(box(
                                 # Options for filtering
-                                selectInput("filtBox", "Filter Observations", choices = 
+                                selectInput("filtSca", "Filter Observations", choices = 
                                                 list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Developer" = uDevl, "Rating" = uRatg)), width = 4),
                                 #checkboxInput("panel", "Panel?"),
@@ -134,6 +135,16 @@ dashboardPage(
             ),
             # Modeling page content
             tabItem(tabName = "Modeling",
+                    tags$head(
+                        tags$style(
+                            HTML(".shiny-notification {
+                                 position:fixed;
+                                 top: calc(50%);
+                                 left: calc(50%);
+                                 }"
+                            )
+                        )
+                    ),
                     h2("Modeling Content"),
                     mainPanel(
                         
@@ -146,25 +157,11 @@ dashboardPage(
                                              h2(),
                                              fluidRow(box(sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
                                                                       max = 85, value = 75, step = 1),
-                                                         selectInput("resp", "Response Variable", choices = barVars, selected = barVars[1]),
-                                                         conditionalPanel(
-                                                             condition = "input.resp == 'Platform'",
-                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[3:16], inline = TRUE)
-                                                         ),
-                                                         conditionalPanel(
-                                                             condition = "input.resp == 'Year_of_Release'",
-                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2,4:16)], inline = TRUE)
-                                                         ),
-                                                         conditionalPanel(
-                                                             condition = "input.resp == 'Genre'",
-                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2,3,5:16)], inline = TRUE)
-                                                         ),
-                                                         conditionalPanel(
-                                                             condition = "input.resp == 'Rating'",
-                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[2:15], inline = TRUE)
-                                                         ),
-                                             )),
-                                             plotOutput("models")),
+                                                          actionButton("run", "Run Models"), 
+                                                          selectInput("resp", "Response Variable", choices = numVars, selected = numVars[1]),
+                                                          checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:16)]),
+                                                      width = 3)),
+                                                      box(plotOutput("models"), width = 9)),
                                     tabPanel("Prediction", 
                                              plotOutput("predict"))
                         )
