@@ -41,8 +41,8 @@ dashboardPage(
                       br(),
                       h4("Modeling"),
                       p("The Modeling page has three different tabs: Information, Fitting and Prediction. The Information tab explains the models used, ", 
-                        "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response.")
-                      
+                        "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response."),
+                     
                       # img(src = "my_image.png", height = 72, width = 72)
                     )
             ),
@@ -98,17 +98,18 @@ dashboardPage(
                         
                         # Violin Plot
                         conditionalPanel(
-                            condition = "input.plotSum == 'Violin plot'",
+                            condition = "input.plotSum == 'Violin Plot'",
                             h3("Violin Plot"),
-                            
-                            # Options for filtering
-                            selectInput("filtBox", "Filter Observations", choices = 
+                            fluidRow(box(
+                                # Options for filtering
+                                selectInput("filtBox", "Filter Observations", choices = 
                                             list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
-                                                 "Developer" = uDevl, "Rating" = uRatg)),
-                            selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]),
-                            selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]),
-                            #selectInput("fVioVar", "Select the 'X' variable", choices = barVars),
-                            plotOutput("violin")
+                                                 "Developer" = uDevl, "Rating" = uRatg)), width = 4),
+                                box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]), width = 4),
+                                box(selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]), width = 4),
+                                #selectInput("fVioVar", "Select the 'X' variable", choices = barVars),
+                                box(plotOutput("violin"), width = 12)
+                            )
                         ),
                         
                         # Scatterplot
@@ -119,14 +120,14 @@ dashboardPage(
                                 # Options for filtering
                                 selectInput("filtBox", "Filter Observations", choices = 
                                                 list("Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
-                                                     "Developer" = uDevl, "Rating" = uRatg)),
+                                                     "Developer" = uDevl, "Rating" = uRatg)), width = 4),
                                 #checkboxInput("panel", "Panel?"),
-                                selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]),
-                                selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]),
+                                box(selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]), width = 4),
+                                box(selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]), width = 4),
                                 ),
-                            
-                            box(plotlyOutput("scatter"))
-                            )
+                                
+                                # Scatterplot output
+                                box(plotlyOutput("scatter"), width = 12)
                         )
                         
                     )

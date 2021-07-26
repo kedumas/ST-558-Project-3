@@ -50,9 +50,6 @@ function(input, output, session) {
   # Barplot of a single variable
   output$bar <- renderPlot({
     barVar <- input$facts
-    #games <- fGames()
-    #if(!is.null(input$textBox)){filtObs <- input$textBox}
-    #if(!is.null(input$filterBox)){filt <- input$filterBox}
 
     # Filter the data for the plot
     ggplot(games, aes_string(barVar)) + geom_bar(aes_string(fill = barVar)) + coord_flip() + theme_minimal()
@@ -83,18 +80,14 @@ function(input, output, session) {
     #fVioVar <- input$fVio
     
     # Filter the data for the plot
-    ggplot(games, aes_string(xVioVar, yVioVar)) + geom_violin() + theme_minimal()
+    ggplot(games, aes_string(xVioVar, yVioVar)) + geom_violin() + coord_flip() + theme_minimal()
   })
   
   # Scatterplot
-
   output$scatter <- renderPlotly({
-      plot_ly(
-      games, x = ~get(input$xSca), y = ~get(input$ySca),
-      # Hover text:
-      text = ~paste("Game:", Name, "<br>Developer:", Developer)
-    ) 
-  })
+    p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
+    ggplotly(p, tooltip = c("x", "y", "label"))
+      })
   
   # Download the selected data set
   #output$saveData <- downloadHandler(
