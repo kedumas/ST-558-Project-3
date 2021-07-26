@@ -142,8 +142,31 @@ dashboardPage(
                                     tabPanel("Modeling Info", textOutput("text"),
                                              h2("Title"),
                                              p("Test words!")),
-                                    tabPanel("Model Fitting", plotOutput("models")),
-                                    tabPanel("Prediction", plotOutput("predict"))
+                                    tabPanel("Model Fitting", 
+                                             h2(),
+                                             fluidRow(box(sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
+                                                                      max = 85, value = 75, step = 1),
+                                                         selectInput("resp", "Response Variable", choices = barVars, selected = barVars[1]),
+                                                         conditionalPanel(
+                                                             condition = "input.resp == 'Platform'",
+                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[3:16], inline = TRUE)
+                                                         ),
+                                                         conditionalPanel(
+                                                             condition = "input.resp == 'Year_of_Release'",
+                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2,4:16)], inline = TRUE)
+                                                         ),
+                                                         conditionalPanel(
+                                                             condition = "input.resp == 'Genre'",
+                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2,3,5:16)], inline = TRUE)
+                                                         ),
+                                                         conditionalPanel(
+                                                             condition = "input.resp == 'Rating'",
+                                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[2:15], inline = TRUE)
+                                                         ),
+                                             )),
+                                             plotOutput("models")),
+                                    tabPanel("Prediction", 
+                                             plotOutput("predict"))
                         )
                     )
             )

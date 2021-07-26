@@ -89,6 +89,9 @@ function(input, output, session) {
     ggplotly(p, tooltip = c("x", "y", "label"))
       })
   
+  # Model Setup
+
+  
   # Download the selected data set
   #output$saveData <- downloadHandler(
   #  filename = "VG_Sales_22Dec2016.csv",
