@@ -102,7 +102,7 @@ function(input, output, session) {
   # Model Page Setup  
   # Large factor (over 100 factors!) variable warning
   observeEvent(
-    input$run, {showNotification("If Publisher or Developer has been selected, the output will be too long to fit the page.", 
+    input$run, {showNotification("If Publisher or Developer has been selected, the output will be exceedingly long. If multiple predictors are selected, a delay may be experienced while the models are fit.", 
                                  type = "warning", duration = 7)}
   )
   
@@ -113,11 +113,11 @@ function(input, output, session) {
     # Determine the position of the response name within allVars vector 
     newResp <- Position(function(x) x == input$resp, allVars)
     # Update the checkboxes by removing the selected response variable as identified by Position()
-    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)])}
+    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[4])}
     })
   observe({
     # Update the checkboxes if the user reselected NA_Sales
-    if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)])}
+    if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)], selected = allVars[4])}
   })
   train <- reactive({
     set.seed(13)
@@ -125,16 +125,39 @@ function(input, output, session) {
     train <- games[trainIndex,]
   })
   
-  mlr <- reactive({
+  control <- reactive({
+    if(input$cvRep == "1"){trainControl(method = input$cv, number = noquote(input$cvNum))
+      } else trainControl(method = input$cv, number = noquote(input$cvNum), repeats = noquote(input$cvRep))
+  })
+  
+  # Multiple Linear Regression
+  mlr <- eventReactive(input$run, {
     trainData <- train()
-    y <- trainData %>% select(noquote(input$resp))
-    x <- trainData %>% select(noquote(input$pred))
-    form <- reformulate(x, y)
-    lm(form, data = trainData)
+    form <- reformulate(input$pred, input$resp)
+    caret::train(form, data = trainData, method = "lm", preProcess = c("center", "scale"), trControl = control())
   })
   
   output$sumModel <- renderPrint({
     summary(mlr())
+  })
+  
+  output$modelRMSE <- renderPrint({
+    test <- games[-train()]
+    predict(mlr, test)
+  })
+  
+  # Regression Tree
+  tree <- reactive({
+    trainData <- train()
+    form <- reformulate(input$pred, input$resp)
+    caret::train(class ~ ., data = train, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+  })
+  
+  # Random Forest Fit
+  rForest <- reactive({
+    trainData <- train()
+    form <- reformulate(input$pred, input$resp)
+    caret::train(class ~ ., data = trainData, method = "rf", preProcess = c("center", "scale"), trControl = control())
   })
 
   # Download Functionality

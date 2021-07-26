@@ -16,7 +16,7 @@ User_Score <- as.numeric(unlist(games["User_Score"]))
 games["User_Score"] <- User_Score
 
 # Data for correlation plot
-corGames <- games %>% select(where(is.numeric), -Global_Sales) %>% cor()
+corGames <- games %>% select(where(is.numeric)) %>% cor()
 
 # Different lists of data set variables to use in ui.R
 allVars <- colnames(games)

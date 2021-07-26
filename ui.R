@@ -85,7 +85,9 @@ dashboardPage(
                             h3("Correlation Plot"), 
                             checkboxGroupInput("corOpts", "Variables for the Correlation Plot", choices = corVars, 
                                                selected = corVars, inline = TRUE),
-                            plotOutput("corPlot")
+                            plotOutput("corPlot"),
+                            p("**Please note that Global Sales is the sum of all other sales and so it's expected to be highly correlated",
+                              "with the other sales data.")
                         ),
                         
                         # Barplot
@@ -157,13 +159,19 @@ dashboardPage(
                                              p("Test words!")),
                                     tabPanel("Model Fitting", 
                                              h2(),
-                                             fluidRow(box(sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
+                                             sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
                                                                       max = 85, value = 75, step = 1),
-                                                          actionButton("run", "Run Models"), 
-                                                          selectInput("resp", "Response Variable", choices = numVars, selected = numVars[1]),
-                                                          checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:16)]),
-                                                      width = 3)),
-                                             box(verbatimTextOutput("sumModel"))),
+                                             actionButton("run", "Run Models"), 
+                                             selectInput("resp", "Response Variable", choices = numVars, selected = numVars[1]),
+                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:16)], selected = allVars[4]),
+                                             selectInput("cv", "Please select a Cross Validation method", choices = 
+                                                             c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
+                                             sliderInput("cvNum", "Number of folds", min = 3, max = 20, value = 10, step = 1),
+                                             selectInput("cvRep", "Number of repeats", choices = c(1, 2, 3, 4, 5, 6)),
+                                             
+                                             verbatimTextOutput("sumModel"),
+                                             plotOutput("regTree")
+                                             ),
                                     tabPanel("Prediction", 
                                              plotOutput("predict"))
                         )
