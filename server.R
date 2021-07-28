@@ -119,15 +119,22 @@ function(input, output, session) {
     # Update the checkboxes if the user reselected NA_Sales
     if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)], selected = allVars[4])}
   })
-  train <- reactive({
+  trainIndex <- reactive({
     set.seed(13)
-    trainIndex <- order(sample(nrow(games) * noquote(input$split)/100))
-    train <- games[trainIndex,]
+    order(sample(nrow(games) * noquote(input$split)/100))
+  })
+  
+  train <- reactive({
+    train <- games[trainIndex(),]
+  })
+  
+  test <- reactive({
+    test <- games[-trainIndex(),]
   })
   
   control <- reactive({
-    if(input$cvRep == "1"){trainControl(method = input$cv, number = noquote(input$cvNum))
-      } else trainControl(method = input$cv, number = noquote(input$cvNum), repeats = noquote(input$cvRep))
+    if(input$cvRep == "1"){trainControl(method = "cv", number = noquote(input$cvNum))
+      } else trainControl(method = "repeatedcv", number = noquote(input$cvNum), repeats = noquote(input$cvRep))
   })
   
   # Multiple Linear Regression
@@ -141,24 +148,44 @@ function(input, output, session) {
     summary(mlr())
   })
   
-  output$modelRMSE <- renderPrint({
-    test <- games[-train()]
-    predict(mlr, test)
+  output$mlrRMSE <- renderPrint({
+    test <- test()
+    resp <- Position(function(x) x == input$resp, allVars)
+    testObs <- test[[resp]]
+    pred <- predict(mlr(), test)
+    postResample(pred, obs = testObs)
   })
   
   # Regression Tree
-  tree <- reactive({
+  tree <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    caret::train(class ~ ., data = train, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+  })
+  
+  output$regTree <- renderPrint({
+    tree()
+    # library(rpart.plot)
+    # rpart.plot(rpartFit$finalModel)
+  })
+  output$treeRMSE <- renderPrint({
+    test <- test()
+    resp <- Position(function(x) x == input$resp, allVars)
+    testObs <- test[[resp]]
+    pred <- predict(tree(), test)
+    postResample(pred, obs = testObs)
   })
   
   # Random Forest Fit
-  rForest <- reactive({
-    trainData <- train()
-    form <- reformulate(input$pred, input$resp)
-    caret::train(class ~ ., data = trainData, method = "rf", preProcess = c("center", "scale"), trControl = control())
-  })
+  # rForest <- eventReactive(input$run, {
+  #   trainData <- train()
+  #   form <- reformulate(input$pred, input$resp)
+  #   caret::train(form, data = trainData, method = "rf", preProcess = c("center", "scale"), trControl = control())
+  # })
+  # 
+  # output$randForest <- renderPrint({
+  #   rForest()
+  # })
 
   # Download Functionality
   # Download the selected data set
