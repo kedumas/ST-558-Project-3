@@ -1,9 +1,9 @@
-#library(shinydashboard)
+library(shinydashboard)
 library(shinydashboardPlus)
 library(DT)
 library(plotly)
 
-dashboardPage(
+fluidPage(dashboardPage(
     skin = "red",
     dashboardHeader(title = "Video Game Trends"),
     dashboardSidebar(
@@ -35,7 +35,7 @@ dashboardPage(
                           "and distributer, but Take-Two Interactive is a publisher for the developer Rockstar North.",
                           "In this example, Nintendo can also be a publisher for other developers such as Game Arts."),
                         img(src = "psvita.png", height = 300, width = 300),
-                        p("This is an image of the Playstation Vita, from", a(href="https://kotaku.com/fans-are-finally-coming-to-terms-with-the-vitas-death-1833298145", "Kotaku.com.")),
+                        p("Image of the Playstation Vita, from", a(href="https://kotaku.com/fans-are-finally-coming-to-terms-with-the-vitas-death-1833298145", "Kotaku.com.")),
                         br(),
                         h3("About the Other Pages"),
                         h4("Data"),
@@ -48,7 +48,8 @@ dashboardPage(
                         br(),
                         h4("Modeling"),
                         p("The Modeling page has three different tabs: Information, Fitting and Prediction. The Information tab explains the models used, ", 
-                          "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response.")
+                          "the Fitting tab allows the user to select different inputs for the models and the Prediction tab will predict a response."),
+                        br(),
                     )
             ),
             
@@ -156,8 +157,22 @@ dashboardPage(
                         # Output: Tabset with modeling information, fitting and prediction
                         tabsetPanel(type = "tabs",
                                     tabPanel("Modeling Info", textOutput("text"),
-                                             h2("Title"),
-                                             p("Test words!")),
+                                             h2("Multiple Linear Regression"),
+                                             h3("Benefits"),
+                                             p("Test words!"),
+                                             h3("Drawbacks"),
+                                             p("Test words!"),
+                                             h2("Regression Tree Model"),
+                                             h3("Benefits"),
+                                             p("Test words!"),
+                                             h3("Drawbacks"),
+                                             p("Test words!"),
+                                             h2("Random Forest"),
+                                             h3("Benefits"),
+                                             p("Test words!"),
+                                             h3("Drawbacks"),
+                                             p("Test words!")
+                                             ),
                                     tabPanel("Model Fitting", 
                                              h2(),
                                              fluidRow(column(4, wellPanel(
@@ -193,4 +208,4 @@ dashboardPage(
             )
         )
     )
-)
+))

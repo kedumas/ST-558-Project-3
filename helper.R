@@ -4,12 +4,19 @@ library(knitr)
 # Read in the desired data set
 games <- read_csv("Video_Games_Sales_as_at_22_Dec_2016.csv")
 
+# Not all video games contain the metacritic ratings data. These have been removed to only look at complete entries
+games <- na.omit(games)
+
+# Removing observations for games released before or during 1996 as they have less than 10 observations per year
+games <- games[games$Year_of_Release > 1996,]
+
+# Removing observations for games with the rating of AO and RP as they have less than 10 observations each
+games <- games[games$Rating != "AO",]
+games <- games[games$Rating != "RP",]
+
 # Converted the correct columns to factors
 facts <- c("Platform", "Year_of_Release", "Genre", "Publisher", "Developer", "Rating")
 games[facts] <- lapply(games[facts], factor)
-
-# Not all video games contain the metacritic ratings data. These have been removed to only look at complete entries
-games <- na.omit(games)
 
 # One column was in list form and designated as character data, while it is actually numeric information.
 User_Score <- as.numeric(unlist(games["User_Score"]))

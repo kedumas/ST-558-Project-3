@@ -4,6 +4,8 @@ library(DT)
 library(corrplot)
 library(plotly)
 library(caret)
+library(randomForest)
+
 
 # Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
 # easily callable subsets of the variables and variable names. See helper.R for more information.
@@ -24,12 +26,6 @@ function(input, output, session) {
   )
   
   # Data Manipulation Page Setup
-  # Filter for plots
-  filtBox <- reactive({
-    
-    
-  })
-  
   # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
   # summaries shown.
   output$sumData <- renderPrint({
@@ -80,14 +76,15 @@ function(input, output, session) {
   # Developer both have over 100 different levels and would not be good for this type of plot. Default is Platform.
   output$bar <- renderPlot({
     games <- bGames()
-    ggplot(games, aes_string(input$facts)) + geom_bar(aes_string(fill = input$facts)) + coord_flip() + theme_minimal()
+    ggplot(games, aes_string(input$facts)) + geom_bar(aes_string(fill = input$facts)) + coord_flip() +
+      theme_minimal() + stat_count(aes(label = ..count..), hjust = 1, geom = "text", position = "identity")
   })
 
   # Violin plot looking at the same variables as the barplot compared to all the numeric variables. 
   # Default is Platform by NA_Sales.
   output$violin <- renderPlot({
     games <- vGames()
-    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal()
+    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal() 
   })
   
   # Scatterplot looking at all the numeric variables compared to each other pairwise as the user specifies. 
@@ -167,7 +164,9 @@ function(input, output, session) {
     tree()
     # library(rpart.plot)
     # rpart.plot(rpartFit$finalModel)
+    # data.frame(summary(score)$coef[summary(score)$coef[,4] <= .05, 4])
   })
+  
   output$treeRMSE <- renderPrint({
     test <- test()
     resp <- Position(function(x) x == input$resp, allVars)
@@ -177,15 +176,31 @@ function(input, output, session) {
   })
   
   # Random Forest Fit
-  # rForest <- eventReactive(input$run, {
-  #   trainData <- train()
-  #   form <- reformulate(input$pred, input$resp)
-  #   caret::train(form, data = trainData, method = "rf", preProcess = c("center", "scale"), trControl = control())
-  # })
-  # 
-  # output$randForest <- renderPrint({
-  #   rForest()
-  # })
+  rForest <- eventReactive(input$run, {
+    trainData <- train()
+    resp <- Position(function(x) x == input$resp, allVars)
+    for (i in length(input$pred)){
+      pred[i] <- Position(function(x) x == input$pred[i], allVars)
+    }
+    pred
+    #trainData[,pred]
+    #resp <- Position(function(x) x == input$resp, allVars)
+    #trainData[,]
+    #pred
+    #vars <- reformulate(input$pred, input$resp)
+    #ranger(vars, trainData)
+    # #resp <- trainData[[yVar]]
+    # pred <- input$pred
+    # #resp <- input$resp
+    # xTrain <- trainData %>% select(pred)
+    # yTrain <- trainData[,resp]
+    # rfcv(xTrain, yTrain, cv.fold=5, scale = "log", step = 0.5, mtry = function(p) max(1, floor(sqrt(p))))
+    # #caret::train(form, data = trainData, method = "rf", preProcess = c("center", "scale"), trControl = control())
+  })
+
+  output$randForest <- renderPrint({
+    rForest()
+  })
 
   # Download Functionality
   # Download the selected data set
