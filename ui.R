@@ -29,13 +29,14 @@ fluidPage(dashboardPage(
                         h4("This video game data set was taken from", 
                            a(href="https://www.kaggle.com/rush4ratio/video-game-sales-with-ratings", "Kaggle"),
                            "and is called ", em("Video Game Sales with Ratings")),
-                        p("There are 16 variables with data ranging from game name, to year released, to sales data to ratings.", 
-                          "There are 6,947 different observations in this set for games that range the gambit of genres.",
-                          "Many publishers and developers have the same name, but not all. For example, Nintendo is both a publisher",
-                          "and distributer, but Take-Two Interactive is a publisher for the developer Rockstar North.",
-                          "In this example, Nintendo can also be a publisher for other developers such as Game Arts."),
                         img(src = "psvita.png", height = 300, width = 300),
                         p("Image of the Playstation Vita, from", a(href="https://kotaku.com/fans-are-finally-coming-to-terms-with-the-vitas-death-1833298145", "Kotaku.com.")),
+                        p("There are 16 variables with data ranging from game name, to year released, to sales data to ratings.", 
+                          "There are 6,399 different observations in this set for games that range the gambit of genres.",
+                          "Two tables below show the short hand and long form of the variables Platform, which is the hardware the game was ",
+                          "designed to run on, and the game's Rating."),
+                        tableOutput("platTable"),
+                        tableOutput("rateTable"),
                         br(),
                         h3("About the Other Pages"),
                         h4("Data"),
@@ -100,7 +101,7 @@ fluidPage(dashboardPage(
                             # Options for filtering
                             selectInput("filtBar", "Filter Observations", choices = 
                                             list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
-                                                 "Developer" = uDevl, "Rating" = uRatg)),
+                                                 "Rating" = uRatg)),
                             selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars, selected = barVars[2]),
                             plotOutput("bar", width = "100%")
                         ),
@@ -113,7 +114,7 @@ fluidPage(dashboardPage(
                                 # Options for filtering
                                 selectInput("filtVio", "Filter Observations", choices = 
                                                 list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
-                                                     "Developer" = uDevl, "Rating" = uRatg)), width = 4),
+                                                     "Rating" = uRatg)), width = 4),
                                 box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]), width = 4),
                                 box(selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]), width = 4),
                                 box(plotOutput("violin"), width = 12)
@@ -128,7 +129,7 @@ fluidPage(dashboardPage(
                                 # Options for filtering
                                 selectInput("filtSca", "Filter Observations", choices = 
                                                 list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
-                                                     "Developer" = uDevl, "Rating" = uRatg)), width = 4),
+                                                     "Rating" = uRatg)), width = 4),
                                 box(selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]), width = 4),
                                 box(selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]), width = 4),
                             ),
@@ -156,56 +157,118 @@ fluidPage(dashboardPage(
                         
                         # Output: Tabset with modeling information, fitting and prediction
                         tabsetPanel(type = "tabs",
-                                    tabPanel("Modeling Info", textOutput("text"),
-                                             h2("Multiple Linear Regression"),
+                                    tabPanel("Modeling Info", 
+                                             withMathJax(),
+                                             h2("Multinominal Logistic Regression"),
+                                             p("We're utilizing the caret package to fit a multinomial logistic regression model."),
                                              h3("Benefits"),
-                                             p("Test words!"),
+                                             p("Multinomial Logistic Regression in used for data with non-ordered categorical responses.", 
+                                               "It is a type of generalized linear model and is an extention to the Logistic Regression model and works when ", 
+                                               "there are more than two factor levels.",
+                                               ""),
                                              h3("Drawbacks"),
-                                             p("Test words!"),
-                                             h2("Regression Tree Model"),
+                                             p("Linearity of the relationship between the predictors and response is a needed assumption and real world ", 
+                                               "data is doesn't necessarily have this linear relationship. Becasue of this, the model may not be the best ", 
+                                               "fit for the data, or may give misleading results."),
+                                             h2("Classification Tree Model"),
+                                             p("We're utilizing the caret package to fit a classification tree."),
                                              h3("Benefits"),
-                                             p("Test words!"),
+                                             p("With tree based models, there is no assumption of linearity. This allows for "),
                                              h3("Drawbacks"),
                                              p("Test words!"),
                                              h2("Random Forest"),
+                                             p("We are utilizing the caret package to fit a random forest."),
                                              h3("Benefits"),
                                              p("Test words!"),
                                              h3("Drawbacks"),
-                                             p("Test words!")
+                                             p("Fitting a Random Forest can be very slow! There are nearly 7000 observations in this dataset ",
+                                               "and so we reduce the time to fit the model by letting the user choose a specific number for the mtry tuning parameter." )
                                              ),
                                     tabPanel("Model Fitting", 
                                              h2(),
-                                             fluidRow(column(4, wellPanel(
-                                             sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
-                                                         max = 85, value = 75, step = 1),
-                                             actionButton("run", "Run Models"), 
-                                             selectInput("resp", "Response Variable", choices = numVars, selected = numVars[1]),
-                                             checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:16)], selected = allVars[4]),
-                                             selectInput("cv", "Please select a Cross Validation method", choices = 
-                                                             c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
-                                             sliderInput("cvNum", "Number of folds", min = 3, max = 20, value = 10, step = 1),
-                                             selectInput("cvRep", "Number of repeats", choices = c(1, 2, 3, 4, 5, 6)),
-                                             )),
-                                             column(8,
-                                             h3("Linear Model Fit Statistics"),
-                                             verbatimTextOutput("sumModel"),
-                                             h3("Linear Model Fit Error on Test Set"),
-                                             verbatimTextOutput("mlrRMSE"),
-                                             h3("Regression Tree Fit"),
-                                             verbatimTextOutput("regTree"),
-                                             h3("Regression Tree Fit Error on Test Set"),
-                                             verbatimTextOutput("treeRMSE"),
-                                             h3("Random Forest Fit"),
-                                             verbatimTextOutput("randForest"),
-                                             h3("Random Forest Fit Error On Test Set"),
-                                             verbatimTextOutput("rfRMSE")
-                                             ))
+                                             fluidRow(column(4, 
+                                                             wellPanel(
+                                                                 sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
+                                                                             max = 85, value = 50, step = 1),
+                                                                 actionButton("run", "Run Models"),
+                                                                 selectInput("resp", "Response Variable", choices = barVars[-2], selected = barVars[4]),
+                                                                 checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:14)], 
+                                                                                    selected = allVars[3]),
+                                                                 selectInput("cv", "Please select a Cross Validation method", choices = 
+                                                                                 c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
+                                                                 sliderInput("cvNum", "Number of folds", min = 3, max = 20, value = 10, step = 1),
+                                                                 selectInput("cvRep", "Number of repeats", choices = c(1, 2, 3, 4, 5, 6)),
+                                                                 selectInput("mtryNum", "Number of variables to try for Random Forest", choices = 1:14, 
+                                                                             selected = 3),
+                                                                 )
+                                                             ),
+                                                      column(8,
+                                                             h3("Multinomial Logistic Regression Model Fit Statistics"),
+                                                             verbatimTextOutput("mlrModel"),
+                                                             h3("Multinomial Logistic Regression Model Fit Error on Test Set"),
+                                                             verbatimTextOutput("mlrAcc"),
+                                                             h3("Classification Tree Fit"),
+                                                             verbatimTextOutput("classTree"),
+                                                             h3("Classification Tree Fit Error on Test Set"),
+                                                             verbatimTextOutput("treeAcc"),
+                                                             h3("Random Forest Fit"),
+                                                             verbatimTextOutput("randForest"),
+                                                             h3("Random Forest Fit Error On Test Set"),
+                                                             verbatimTextOutput("rfAcc")
+                                                             )
+                                             )
                                     ),
                                     tabPanel("Prediction", 
-                                             plotOutput("predict"))
+                                             h3(),
+                                             selectInput("predMod", "Prediction Model", choices = c("Multinomial Logistic Regression", "Classification Tree", "Random Forest")),
+                                             actionButton("predButton", "Predict!"),
+                                             conditionalPanel(
+                                                 condition = "input.predMod == 'Multinomial Logistic Regression'",
+                                                 selectInput("respMLR", "Response Variable", choices = barVars[-2], selected = barVars[4]),
+                                                 selectInput("predMLR", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
+                                                 conditionalPanel(condition = "input.predMLR %in% facts",
+                                                                  
+                                                 ),
+                                                 conditionalPanel(condition = "input.predMLR %in% numVars",
+                                                                               
+                                                 ),
+                                                 p("MLR"),
+                                                 verbatimTextOutput("mlrPred")
+                                             ),
+                                             
+                                             conditionalPanel(
+                                                 condition = "input.predMod == 'Classification Tree'",
+                                                 selectInput("respTree", "Response Variable", choices = barVars[-2], selected = barVars[4]),
+                                                 selectInput("predTree", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
+                                                 conditionalPanel(condition = "input.predTree %in% facts",
+                                                                               
+                                                 ),
+                                                 conditionalPanel(condition = "input.predTree %in% numVars",
+                                                                               
+                                                 ),
+                                                 p("Class"),
+                                                 verbatimTextOutput("classPred")
+                                             ),
+                                             
+                                             conditionalPanel(
+                                                 condition = "input.predMod == 'Random Forest'",
+                                                 selectInput("respRF", "Response Variable", choices = barVars[-2], selected = barVars[4]),
+                                                 selectInput("predRF", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
+                                                 conditionalPanel(condition = "input.predRF %in% facts",
+                                                                               
+                                                 ),
+                                                 
+                                                 conditionalPanel(condition = "input.predRF %in% numVars",
+                                                                               
+                                                 ),
+                                                 p("randForest"),
+                                                 verbatimTextOutput("rfPred")
+                                             )
+                                    )
                         )
                     )
             )
         )
     )
-))
+)
+)
