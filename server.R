@@ -2,7 +2,6 @@ library(shiny)
 library(tidyverse)
 library(DT)
 library(varhandle)
-library(corrplot)
 library(ggcorrplot)
 library(plotly)
 library(caret)
@@ -67,13 +66,7 @@ function(input, output, session) {
     sums()
   })
   
-  # Correlation plot with inputs selected byt he user. Default is all variables included.
-  # corrOut <- reactive({
-  #   corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
-  # })
-  # output$corPlot <- renderPlot(
-  #   corrOut()
-  # )
+  # Correlation plot with inputs selected by the user. Default is all variables included.
   corrOut <- reactive({
     ggcorrplot(corGames[input$corOpts,input$corOpts], method = "circle", type = "lower", ggtheme = ggplot2::theme_classic) + 
       ggtitle("Correlation Plot") + theme(plot.title = element_text(hjust = 0.5))
@@ -174,9 +167,6 @@ function(input, output, session) {
   },
   content = function(file) {
     png(file)
-    # if(input$plotSum == "correlation Plot"){
-    #   corrplot(corPlot, type = "lower", tl.srt = 45)
-    # } else
     print(plotImage())
     dev.off()
   }
@@ -308,7 +298,7 @@ function(input, output, session) {
     }
   )
 
-  # Prediting Multinomial Logistic Regression
+  # Predicting Multinomial Logistic Regression
   output$mlrPred <- renderPrint({
     predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
                                     NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
