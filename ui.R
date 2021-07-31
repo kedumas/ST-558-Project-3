@@ -72,11 +72,14 @@ fluidPage(dashboardPage(
                     h2("Data Exploration Fun"),
                     mainPanel(
                         
-                        # Action button to save desired plots
-                        downloadButton("savePlotSum", "Download"),
-                        
                         # Drop down menu for the desired output
                         selectInput("plotSum", "Select the desired plot or summary", choices = dataInputs),
+                        
+                        # Action button to save desired plots
+                        conditionalPanel(
+                            condition = "input.plotSum != 'Summary Statistics'",
+                            downloadButton("savePlotSum", "Download")
+                        ),
                         
                         # Summary statistics of the data set
                         conditionalPanel(

@@ -3,6 +3,7 @@ library(tidyverse)
 library(DT)
 library(varhandle)
 library(corrplot)
+library(ggcorrplot)
 library(plotly)
 library(caret)
 
@@ -67,8 +68,18 @@ function(input, output, session) {
   })
   
   # Correlation plot with inputs selected byt he user. Default is all variables included.
+  # corrOut <- reactive({
+  #   corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
+  # })
+  # output$corPlot <- renderPlot(
+  #   corrOut()
+  # )
+  corrOut <- reactive({
+    ggcorrplot(corGames[input$corOpts,input$corOpts], method = "circle", type = "lower", ggtheme = ggplot2::theme_classic) + 
+      ggtitle("Correlation Plot") + theme(plot.title = element_text(hjust = 0.5))
+  })
   output$corPlot <- renderPlot(
-    corrplot(corGames[input$corOpts,input$corOpts], type = "lower", tl.srt = 45)
+    corrOut()
   )
   
   # Created filter if else flows to determine filtering for bar, violin and scatterplots.
@@ -102,47 +113,72 @@ function(input, output, session) {
     sGames
   })
   
-  # Barplot of a single variable. Looking only at Platform, Year of Release, Genre, and Rating. Publisher and 
-  # Developer both have over 100 different levels and would not be good for this type of plot. Default is Platform.
-  output$bar <- renderPlot({
+  # Barplot of a single variable. Looking only at Platform, Year of Release, Genre, and Rating. Default is Platform.
+  bar <- reactive({
     games <- bGames()
     ggplot(games, aes_string(input$facts)) + geom_bar(aes_string(fill = input$facts)) + coord_flip() +
       theme_minimal() + stat_count(aes(label = ..count..), hjust = 1, geom = "text", position = "identity")
   })
+  output$bar <- renderPlot({
+    bar()
+  })
 
   # Violin plot looking at the same variables as the barplot compared to all the numeric variables. 
   # Default is Platform by NA_Sales.
-  output$violin <- renderPlot({
+  vioPlot <- reactive({
     games <- vGames()
-    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal() 
+    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal()
+  })
+  
+  output$violin <- renderPlot({
+     vioPlot()
   })
   
   # Scatterplot looking at all the numeric variables compared to each other pairwise as the user specifies. 
   # Default is NA_Sales by Critic_Count.
-  output$scatter <- renderPlotly({
+  scatPlot <- reactive({
     games <- sGames()
     # Ggplot for a scatterplot is fit, then converted to plotly for interactivity.
     p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
     ggplotly(p, tooltip = c("x", "y", "label"))
   })
   
+  output$scatter <- renderPlotly({
+    scatPlot()
+  })
+  
   # # Download the selected summary or plot
+  # Names for the output file
   plotInput <- reactive({
     switch(input$plotSum,
-           "Summary Statistics" = summaryTable,
-           "Correlation Plot" = correlationPlot,
-           "Barplot" = barplot,
-           "Violin Plot" = violinPlot,
-           "Scatterplot" = scatterplot
+           "Correlation Plot" = "correlationPlot",
+           "Barplot" = "barplot",
+           "Violin Plot" = "violinPlot",
+           "Scatterplot" = "scatterplot"
            )
+  })
+  
+  # Identify the plot to be downloaded
+  plotImage <- reactive({
+    switch(input$plotSum,
+           "Correlation Plot" = corrOut(),
+           "Barplot" = bar(),
+           "Violin Plot" = vioPlot(),
+           "Scatterplot" = scatPlot()
+    )
   })
 
   output$savePlotSum <- downloadHandler(
   filename = function() {
-    paste(plotInput(), ".csv", sep = "")
+    paste(plotInput(), ".png", sep = "")
   },
   content = function(file) {
-    write.csv(plotInput(), file, row.names = FALSE)
+    png(file)
+    # if(input$plotSum == "correlation Plot"){
+    #   corrplot(corPlot, type = "lower", tl.srt = 45)
+    # } else
+    print(plotImage())
+    dev.off()
   }
   )
 
