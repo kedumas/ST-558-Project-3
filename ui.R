@@ -58,9 +58,10 @@ fluidPage(dashboardPage(
             tabItem(tabName = "Data",
                     h2("Data"),
                     mainPanel(
-                        # selectizeInput("dataFilt", "Filter Table", choices =
-                        #                    list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr,
-                        #                         "Publisher" = uPubl,"Rating" = uRatg), multiple = FALSE),
+                        selectizeInput("dataFilt", "Filter Table", choices =
+                                           list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr,
+                                                "Publisher" = uPubl,"Rating" = uRatg), multiple = FALSE),
+                        selectizeInput("DataSel", "Select Desired Columns", choices = allVars, selected = allVars, multiple = TRUE),
                         downloadButton("saveData", "Save Current Data Set"),
                         dataTableOutput("allData", width = "1000px")
                     )

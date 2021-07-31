@@ -23,43 +23,31 @@ function(input, output, session) {
   )
   
   # Data Page Setup
+  # Subsetting the data for desired output
+
+  filtData <- reactive({
+    if(input$dataFilt == " ") {filtData <- games
+    } else if(input$dataFilt %in% games$Platform) {filtData <- games %>% filter(Platform == input$dataFilt)
+    } else if(input$dataFilt %in% games$Year_of_Release) {filtData <- games %>% filter(Year_of_Release == input$dataFilt)
+    } else if(input$dataFilt %in% games$Genre) {filtData <- games %>% filter(Genre == input$dataFilt)
+    } else if(input$dataFilt %in% games$Publisher) {filtData <- games %>% filter(Publisher == input$dataFilt)
+    } else filtData <- games %>% filter(Rating == input$dataFilt)
+    filtData
+  })
+  gameSel <- reactive({
+    gameSel <- filtData() %>% select(input$DataSel) 
+  })
+  
   # Table output for the Data Page. Defaults are 10 observations per page and the table is scrollable.
-  # filtData <- reactive({
-  #   if(input$filtBar == " ") {filtData <- games
-  #   } else if(input$dataFilt %in% games$Platform) {filtData <- games %>% filter(Platform == input$filtBar)
-  #   } else if(input$dataFilt %in% games$Year_of_Release) {filtData <- games %>% filter(Year_of_Release == input$filtBar)
-  #   } else if(input$dataFilt %in% games$Genre) {filtData <- games %>% filter(Genre == input$filtBar)
-  #   } else if(dataFilt %in% games$Publisher) {filtData <- games %>% filter(Publisher == input$filtBar)
-  #   } else filtData <- games %>% filter(Rating == input$filtBar)
-  #   filtData
-  # })
-  # filtData <- reactive({
-  #   filtData()
-  # })
-  # 
-  # output$allData <- renderDataTable(
-  #   filtData() %>% datatable(extensions = 'Buttons',
-  #                            options = list(
-  #                              dom = 'lfrtipB',
-  #                              buttons = "csv"),
-  #                            filter = list(
-  #                              position = 'top'),
-  #                            rownames = FALSE)
-  #   # games,
-  #   # options = list(
-  #   #   pageLength = 10,
-  #   #   scrollX = TRUE,
-  #   #   scrollY = "500px",
-  #   #   ordering = TRUE
-  #   #   )
-  # )
-  # output$saveData <- downloadHandler(
-  #   #data <- fullData(),
-  #   filename = "VideoGameSalesRatings.csv",
-  #   content = function(file) {
-  #     write.csv(filtData, file, row.names = FALSE)
-  #   }
-  # )
+  output$allData <- renderDataTable(
+    gameSel() %>% datatable(rownames = FALSE)
+  )
+  output$saveData <- downloadHandler(
+    filename = "VideoGameSalesRatings.csv",
+    content = function(file) {
+      write.csv(gameSel(), file, row.names = FALSE)
+    }
+  )
   
   # Data Manipulation Page Setup
   # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
