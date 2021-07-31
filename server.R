@@ -15,8 +15,7 @@ function(input, output, session) {
     data.frame("Platform Shorthand" = uPlat, 
                "Platform Long Name" = c("Nintendo Wii", "Nintendo DS", "Xbox 360", "Playstation 3", "Playstation 2", "Nintendo 3DS", 
                                       "Playstation 4", "Playstation", "Xbox", "Personal Computer", "Playstation Portable", 
-                                      "Nintendo WiiU", "Nintendo GameCube", "Nintendo Gameboy Advance", "Xbox One", "Playstation Vita", 
-                                      "Sega Dreamcast"))
+                                      "Nintendo WiiU", "Nintendo GameCube", "Nintendo Gameboy Advance", "Xbox One", "Playstation Vita"))
   )
   output$rateTable <- renderTable(
     data.frame("Ratings Shorthand" = c("E", "E10+", "T", "M"), 
@@ -25,15 +24,42 @@ function(input, output, session) {
   
   # Data Page Setup
   # Table output for the Data Page. Defaults are 10 observations per page and the table is scrollable.
-  output$allData <- renderDataTable(
-    games, 
-    options = list(
-      pageLength = 10,
-      scrollX = TRUE,
-      scrollY = "500px",
-      ordering = TRUE
-      )
-  )
+  # filtData <- reactive({
+  #   if(input$filtBar == " ") {filtData <- games
+  #   } else if(input$dataFilt %in% games$Platform) {filtData <- games %>% filter(Platform == input$filtBar)
+  #   } else if(input$dataFilt %in% games$Year_of_Release) {filtData <- games %>% filter(Year_of_Release == input$filtBar)
+  #   } else if(input$dataFilt %in% games$Genre) {filtData <- games %>% filter(Genre == input$filtBar)
+  #   } else if(dataFilt %in% games$Publisher) {filtData <- games %>% filter(Publisher == input$filtBar)
+  #   } else filtData <- games %>% filter(Rating == input$filtBar)
+  #   filtData
+  # })
+  # filtData <- reactive({
+  #   filtData()
+  # })
+  # 
+  # output$allData <- renderDataTable(
+  #   filtData() %>% datatable(extensions = 'Buttons',
+  #                            options = list(
+  #                              dom = 'lfrtipB',
+  #                              buttons = "csv"),
+  #                            filter = list(
+  #                              position = 'top'),
+  #                            rownames = FALSE)
+  #   # games,
+  #   # options = list(
+  #   #   pageLength = 10,
+  #   #   scrollX = TRUE,
+  #   #   scrollY = "500px",
+  #   #   ordering = TRUE
+  #   #   )
+  # )
+  # output$saveData <- downloadHandler(
+  #   #data <- fullData(),
+  #   filename = "VideoGameSalesRatings.csv",
+  #   content = function(file) {
+  #     write.csv(filtData, file, row.names = FALSE)
+  #   }
+  # )
   
   # Data Manipulation Page Setup
   # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
@@ -247,22 +273,30 @@ function(input, output, session) {
   })
   
   # Download Functionality
-  # Download the selected data set
-  # output$saveData <- downloadHandler(
-  #   filename = function() {
-  #     paste(VideoGameSalesRatings, ".csv", sep = "")
-  #   },
-  #   content = function(file) {
-  #     write.csv(file, file, row.names = FALSE)
-  #   }
+  # # Download the selected data set
+  # thedata <- reactive(
+  #   games %>% filter(Species == input$Species) %>% 
+  #     datatable(extensions = 'Buttons',
+  #               options = list(
+  #                 #Each letter is a dif element of a datatable view, this makes buttons the last thing that's shown.
+  #                 dom = 'lfrtipB',
+  #                 buttons = "csv"),
+  #               filter = list(
+  #                 position = 'top'),
+  #               rownames = FALSE)
   # )
+  # 
+
   # 
   # # Download the selected summary or plot
   # plotInput <- reactive({
   #   switch(input$plotSum,
-  #          "rock" = rock,
-  #          "pressure" = pressure,
-  #          "cars" = cars)
+  #          "Summary Statistics" = summaryTable,
+  #          "Correlation Plot" = correlationPlot,
+  #          "Barplot" = barplot,
+  #          "Violin Plot" = violinPlot,
+  #          "Scatterplot" = scatterplot
+  #          )
   # })
   # 
   # output$savePlot <- downloadHandler(

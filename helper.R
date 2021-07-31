@@ -10,16 +10,20 @@ games <- games %>% select(-Developer)
 # Not all video games contain the metacritic ratings data. These have been removed to only look at complete entries
 games <- na.omit(games)
 
-# Removing observations for games released before or during 1996 as they have less than 10 observations per year
-games <- games[games$Year_of_Release > 1997,]
+# Removing observations for games released before or during 1999
+games <- games[games$Year_of_Release > 1999,]
 
-# Removing observations for games with the rating of AO and RP as they have less than 10 observations each
+# Removing observations for categories with less than 15 observations each
 games <- games[games$Rating != "AO",]
 games <- games[games$Rating != "RP",]
+games <- games[games$Platform != "DC",]
 
-# Removing observations that have less than 10 observations
+# Removing the N/A values for the release year
+games <- games %>% filter(str_detect(Year_of_Release, "2"))
+
+# Removing all but the top 15 publishers
 obs <- table(games$Publisher)
-games <- games[games$Publisher %in% names(obs[obs > 9]),]
+games <- games[games$Publisher %in% names(obs[obs > 130]),]
 
 # Converted the correct columns to factors
 facts <- c("Platform", "Year_of_Release", "Genre", "Publisher", "Rating")

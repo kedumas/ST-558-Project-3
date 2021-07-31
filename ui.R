@@ -58,6 +58,9 @@ fluidPage(dashboardPage(
             tabItem(tabName = "Data",
                     h2("Data"),
                     mainPanel(
+                        # selectizeInput("dataFilt", "Filter Table", choices =
+                        #                    list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr,
+                        #                         "Publisher" = uPubl,"Rating" = uRatg), multiple = FALSE),
                         downloadButton("saveData", "Save Current Data Set"),
                         dataTableOutput("allData", width = "1000px")
                     )
@@ -220,7 +223,7 @@ fluidPage(dashboardPage(
                                     ),
                                     tabPanel("Prediction", 
                                              h3("Prediction for Video Game Rating"),
-                                             p("Global Sales is omitted from this as "),
+                                             p("Global Sales is omitted from this as it is the sum of all other sales data and is highly correlated to them."),
                                              selectInput("predMod", "Prediction Model", choices = c("Multinomial Logistic Regression", "Classification Tree", "Random Forest")),
                                              actionButton("predButton", "Predict!"),
                                              br(),
@@ -271,10 +274,6 @@ fluidPage(dashboardPage(
                                                         sliderInput("otSal", "Other Sales", value = max(games$Other_Sales)/2, min = 0, 
                                                                     max = max(games$Other_Sales), step = 0.01)
                                                  ),
-                                                 # column(2,
-                                                 #        sliderInput("glSal", "Global Sales", value = max(games$Global_Sales)/2, min = min(games$Global_Sales), 
-                                                 #                    max = max(games$Global_Sales), step = 0.01)
-                                                 # )
                                              ),
                                              
                                              conditionalPanel(
