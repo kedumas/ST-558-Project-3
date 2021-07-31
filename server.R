@@ -8,19 +8,19 @@ library(caret)
 
 # Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
 # easily callable subsets of the variables and variable names. See helper.R for more information.
-source("helper.R")
+#source("https://raw.githubusercontent.com/kedumas/ST-558-Project-3/main/helper.R")
 
 function(input, output, session) { 
   
   output$platTable <- renderTable(
-    data.frame("Platform Shorthand" = uPlat, 
-               "Platform Long Name" = c("Nintendo Wii", "Nintendo DS", "Xbox 360", "Playstation 3", "Playstation 2", "Nintendo 3DS", 
-                                      "Playstation 4", "Playstation", "Xbox", "Personal Computer", "Playstation Portable", 
-                                      "Nintendo WiiU", "Nintendo GameCube", "Nintendo Gameboy Advance", "Xbox One", "Playstation Vita"))
+    data.frame("Platform" = uPlat, 
+               "Description" = c("Nintendo Wii", "Nintendo DS", "Xbox 360", "Playstation 3", "Playstation 2", "Nintendo 3DS", 
+                                      "Playstation 4", "Xbox", "Personal Computer", "Playstation Portable", "Nintendo WiiU", 
+                                      "Nintendo GameCube", "Nintendo Gameboy Advance", "Xbox One", "Playstation", "Playstation Vita"))
   )
   output$rateTable <- renderTable(
-    data.frame("Ratings Shorthand" = c("E", "E10+", "T", "M"), 
-               "Ratings Descirption" = c("Everyone", "Everyone Aged 10+", "Teens Aged 13+", "Mature Aged 17+"))
+    data.frame("Ratings" = c("E", "E10+", "T", "M"), 
+               "Description" = c("Everyone", "Everyone Aged 10+", "Teens Aged 13+", "Mature Aged 17+"))
   )
   
   # Data Page Setup
