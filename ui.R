@@ -2,6 +2,7 @@ library(shinydashboard)
 library(shinydashboardPlus)
 library(DT)
 library(plotly)
+library(shinycssloaders)
 
 fluidPage(dashboardPage(
     skin = "red",
@@ -72,7 +73,7 @@ fluidPage(dashboardPage(
                     mainPanel(
                         
                         # Action button to save desired plots
-                        downloadButton("savePlot", "Download"),
+                        downloadButton("savePlotSum", "Download"),
                         
                         # Drop down menu for the desired output
                         selectInput("plotSum", "Select the desired plot or summary", choices = dataInputs),
@@ -81,8 +82,8 @@ fluidPage(dashboardPage(
                         conditionalPanel(
                             condition = "input.plotSum == 'Summary Statistics'", 
                             h3("Summary Statistics"),
-                            checkboxGroupInput("sumOpts", "Variables for the Summary Statistics", choices = allVars, 
-                                               selected = allVars, inline = TRUE),
+                            checkboxGroupInput("sumOpts", "Variables for the Summary Statistics", choices = allVars[-1], 
+                                               selected = allVars[-1], inline = TRUE),
                             verbatimTextOutput("sumData")
                         ),
                         
@@ -218,7 +219,7 @@ fluidPage(dashboardPage(
                                                              h3("Random Forest Fit"),
                                                              verbatimTextOutput("randForest"),
                                                              h3("Random Forest Fit Error On Test Set"),
-                                                             verbatimTextOutput("rfAcc")
+                                                             withSpinner(verbatimTextOutput("rfAcc"))
                                                              )
                                              )
                                     ),
@@ -279,20 +280,18 @@ fluidPage(dashboardPage(
                                              
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Multinomial Logistic Regression'",
-                                                 verbatimTextOutput("mlrPred")
+                                                 withSpinner(verbatimTextOutput("mlrPred"))
                                                  
                                              ),
                                              
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Classification Tree'",
-                                                 p("Class"),
-                                                 #verbatimTextOutput("classPred")
+                                                 withSpinner(verbatimTextOutput("classPred"))
                                              ),
 
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Random Forest'",
-                                                 p("randForest"),
-                                                 #verbatimTextOutput("rfPred")
+                                                 withSpinner(verbatimTextOutput("rfPred"))
                                              )
                                     )
                         )

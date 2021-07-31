@@ -1,6 +1,7 @@
 library(shiny)
 library(tidyverse)
 library(DT)
+library(varhandle)
 library(corrplot)
 library(plotly)
 library(caret)
@@ -24,7 +25,6 @@ function(input, output, session) {
   
   # Data Page Setup
   # Subsetting the data for desired output
-
   filtData <- reactive({
     if(input$dataFilt == " ") {filtData <- games
     } else if(input$dataFilt %in% games$Platform) {filtData <- games %>% filter(Platform == input$dataFilt)
@@ -34,6 +34,7 @@ function(input, output, session) {
     } else filtData <- games %>% filter(Rating == input$dataFilt)
     filtData
   })
+  
   gameSel <- reactive({
     gameSel <- filtData() %>% select(input$DataSel) 
   })
@@ -42,6 +43,8 @@ function(input, output, session) {
   output$allData <- renderDataTable(
     gameSel() %>% datatable(rownames = FALSE)
   )
+  
+  # Download the possibly subsetted data table
   output$saveData <- downloadHandler(
     filename = "VideoGameSalesRatings.csv",
     content = function(file) {
@@ -52,9 +55,15 @@ function(input, output, session) {
   # Data Manipulation Page Setup
   # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
   # summaries shown.
-  output$sumData <- renderPrint({
+  sums <- reactive({
     sumVar <- input$sumOpts
-    games %>% select(sumVar) %>% summary()
+    gamesSum <- games
+    gamesSum$Year_of_Release <- unfactor(games$Year_of_Release)
+    gamesSum %>% select(all_of(sumVar)) %>% summary()
+  })
+  
+  output$sumData <- renderPrint({
+    sums()
   })
   
   # Correlation plot with inputs selected byt he user. Default is all variables included.
@@ -116,6 +125,26 @@ function(input, output, session) {
     p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
     ggplotly(p, tooltip = c("x", "y", "label"))
   })
+  
+  # # Download the selected summary or plot
+  plotInput <- reactive({
+    switch(input$plotSum,
+           "Summary Statistics" = summaryTable,
+           "Correlation Plot" = correlationPlot,
+           "Barplot" = barplot,
+           "Violin Plot" = violinPlot,
+           "Scatterplot" = scatterplot
+           )
+  })
+
+  output$savePlotSum <- downloadHandler(
+  filename = function() {
+    paste(plotInput(), ".csv", sep = "")
+  },
+  content = function(file) {
+    write.csv(plotInput(), file, row.names = FALSE)
+  }
+  )
 
   # Model Page Setup  
   # Large factor (over 100 factors!) variable warning
@@ -216,84 +245,63 @@ function(input, output, session) {
   })
   
   # Prediction
-  # Multinomial Logistic Regression
+  # Determining which model to fit
+  trainData <- eventReactive(input$predButton, {
+    if(input$predMod == "Multinomial Logistic Regression"){
+        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                                  data = train(), method = "multinom", trace = FALSE)
+    } else if(input$predMod == "Classification Tree"){
+        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                                  data = train(), method = "rpart", preProcess = c("center", "scale"))
+    } else
+        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                                  data = train(), method = "rf", preProcess = c("center", "scale"), tuneGrid =
+                                    expand.grid(.mtry = 4))
+    trainData
+  })
+  
+  # Adding message for Random Forest Time
+  observeEvent(
+    input$predButton, 
+    if(input$predMod == "Random Forest"){
+      {showNotification("Fitting and predicting with Random Forest may take up to 5 minutes. Please have patience.",
+                        type = "warning", duration = 5)}
+    }
+  )
+
+  # Prediting Multinomial Logistic Regression
   output$mlrPred <- renderPrint({
-    trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
-                                JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                              data = train(), method = "multinom", trace = FALSE)
-    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
-                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
-                                  User_Count = noquote(input$useC)
-                                  )
+    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
+                                    User_Count = noquote(input$useC)
+                                    )
     )
   })
-  
-  # Classification Tree
+
+  # Predicting Classification Tree
   output$classPred <- renderPrint({
-    trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
-                                JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                              data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
-    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
-                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
-                                  User_Count = noquote(input$useC)
-                                  )
+    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
+                                    User_Count = noquote(input$useC)
+                                    )
     )
-    
   })
-  
-  # Random Forest
+
+  # Predicting Random Forest
   output$rfPred <- renderPrint({
-    tunegrid <- expand.grid(.mtry = c(3, 4, 5))
-    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
-                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                 data = trainData, method = "rf", preProcess = c("center", "scale"), tuneGrid = tunegrid)
-    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
-                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
-                                  User_Count = noquote(input$useC)
-                                  )
+    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
+                                    User_Count = noquote(input$useC)
+                                    )
     )
   })
-  
-  # Download Functionality
-  # # Download the selected data set
-  # thedata <- reactive(
-  #   games %>% filter(Species == input$Species) %>% 
-  #     datatable(extensions = 'Buttons',
-  #               options = list(
-  #                 #Each letter is a dif element of a datatable view, this makes buttons the last thing that's shown.
-  #                 dom = 'lfrtipB',
-  #                 buttons = "csv"),
-  #               filter = list(
-  #                 position = 'top'),
-  #               rownames = FALSE)
-  # )
-  # 
-
-  # 
-  # # Download the selected summary or plot
-  # plotInput <- reactive({
-  #   switch(input$plotSum,
-  #          "Summary Statistics" = summaryTable,
-  #          "Correlation Plot" = correlationPlot,
-  #          "Barplot" = barplot,
-  #          "Violin Plot" = violinPlot,
-  #          "Scatterplot" = scatterplot
-  #          )
-  # })
-  # 
-  # output$savePlot <- downloadHandler(
-  # filename = function() {
-  #   paste(input$plotSum, ".csv", sep = "")
-  # },
-  # content = function(file) {
-  #   write.csv(plotInput(), file, row.names = FALSE)
-  # }
-  # )
-
 }
