@@ -28,4 +28,4 @@ install.packages(c("shinydashboard",
                    "caret"))
 ```
 
-shiny::runGitHub("ST-558-Project-3", "kedumas")
+shiny::runGitHub("ST-558-Project-3", "kedumas", ref = "main")
