@@ -219,50 +219,80 @@ fluidPage(dashboardPage(
                                              )
                                     ),
                                     tabPanel("Prediction", 
-                                             h3(),
+                                             h3("Prediction for Video Game Rating"),
+                                             p("Global Sales is omitted from this as "),
                                              selectInput("predMod", "Prediction Model", choices = c("Multinomial Logistic Regression", "Classification Tree", "Random Forest")),
                                              actionButton("predButton", "Predict!"),
+                                             br(),
+                                             fluidRow(
+                                                 column(3,
+                                                        selectInput("plat", "Platform", choices = uPlat)
+                                                 ),
+                                                 column(3,
+                                                        selectInput("year", "Year_of_Release", choices = uYear)
+                                                 ),
+                                                 column(3,
+                                                        selectInput("genre", "Genre", choices = uGenr)
+                                                 ),
+                                                 column(3,
+                                                        selectInput("publ", "Publisher", choices = uPubl)
+                                                 )
+                                             ),
+                                             fluidRow(
+                                                 column(3,
+                                                        sliderInput("critS", "Critic Score", value = 50, min = 0, max = 100, step = 1)
+                                                 ),
+                                                 column(3,
+                                                        numericInput("critC", "Critic Count", value = max(games$Critic_Count)/2, min = min(games$Critic_Count), 
+                                                                     max = max(games$Critic_Count), step = 1)
+                                                 ),
+                                                 column(3,
+                                                        sliderInput("useS", "User Score", value = 5, min = 0, 10, step = 0.1)
+                                                 ),
+                                                 column(3,
+                                                        numericInput("useC", "User Count", value = 5000, min = min(games$User_Count), max = max(games$User_Count), 
+                                                                     step = 1)
+                                                 )
+                                             ),
+                                             fluidRow(
+                                                 column(3,
+                                                        sliderInput("naSal", "North American Sales", value = max(games$NA_Sales)/2, min = 0, 
+                                                                    max = max(games$NA_Sales), step = 0.01)
+                                                 ),
+                                                 column(3,
+                                                        sliderInput("euSal", "European Sales", value = max(games$EU_Sales)/2, min = 0, 
+                                                                    max = max(games$EU_Sales), step = 0.01)
+                                                 ),
+                                                 column(3,
+                                                        sliderInput("jpSal", "Japanese Sales", value = max(games$JP_Sales)/2, min = 0, 
+                                                                    max = max(games$JP_Sales), step = 0.01)
+                                                 ),
+                                                 column(3,
+                                                        sliderInput("otSal", "Other Sales", value = max(games$Other_Sales)/2, min = 0, 
+                                                                    max = max(games$Other_Sales), step = 0.01)
+                                                 ),
+                                                 # column(2,
+                                                 #        sliderInput("glSal", "Global Sales", value = max(games$Global_Sales)/2, min = min(games$Global_Sales), 
+                                                 #                    max = max(games$Global_Sales), step = 0.01)
+                                                 # )
+                                             ),
+                                             
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Multinomial Logistic Regression'",
-                                                 selectInput("respMLR", "Response Variable", choices = barVars[-2], selected = barVars[4]),
-                                                 selectInput("predMLR", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
-                                                 conditionalPanel(condition = "input.predMLR %in% facts",
-                                                                  
-                                                 ),
-                                                 conditionalPanel(condition = "input.predMLR %in% numVars",
-                                                                               
-                                                 ),
-                                                 p("MLR"),
                                                  verbatimTextOutput("mlrPred")
+                                                 
                                              ),
                                              
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Classification Tree'",
-                                                 selectInput("respTree", "Response Variable", choices = barVars[-2], selected = barVars[4]),
-                                                 selectInput("predTree", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
-                                                 conditionalPanel(condition = "input.predTree %in% facts",
-                                                                               
-                                                 ),
-                                                 conditionalPanel(condition = "input.predTree %in% numVars",
-                                                                               
-                                                 ),
                                                  p("Class"),
-                                                 verbatimTextOutput("classPred")
+                                                 #verbatimTextOutput("classPred")
                                              ),
-                                             
+
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Random Forest'",
-                                                 selectInput("respRF", "Response Variable", choices = barVars[-2], selected = barVars[4]),
-                                                 selectInput("predRF", "Predictor Variable", choices = allVars[-c(1, 15)], selected = allVars[4]),
-                                                 conditionalPanel(condition = "input.predRF %in% facts",
-                                                                               
-                                                 ),
-                                                 
-                                                 conditionalPanel(condition = "input.predRF %in% numVars",
-                                                                               
-                                                 ),
                                                  p("randForest"),
-                                                 verbatimTextOutput("rfPred")
+                                                 #verbatimTextOutput("rfPred")
                                              )
                                     )
                         )

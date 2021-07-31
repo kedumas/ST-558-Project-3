@@ -147,8 +147,7 @@ function(input, output, session) {
   mlr <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    #caret::train(form, data = trainData, method = "lm", preProcess = c("center", "scale"), trControl = control())
-    caret::train(form, data = trainData, method = "multinom",preProcess = c("center", "scale"), trace = FALSE)
+    caret::train(form, data = trainData, method = "multinom", trace = FALSE, trControl = control())
   })
   
   output$mlrModel <- renderPrint({
@@ -205,20 +204,46 @@ function(input, output, session) {
   # Prediction
   # Multinomial Logistic Regression
   output$mlrPred <- renderPrint({
-    form <- reformulate(input$pred, input$respMLR)
-    train <- caret::train(form, data = train(), method = "multinom",preProcess = c("center", "scale"), trace = FALSE)
-    pred <- predict(train, test())
-    #predict(pred, data.frame(noquote(input$predMLR) = input$predMLRval))
+    trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
+                                JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                              data = train(), method = "multinom", trace = FALSE)
+    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
+                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
+                                  User_Count = noquote(input$useC)
+                                  )
+    )
   })
   
   # Classification Tree
   output$classPred <- renderPrint({
+    trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
+                                JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                              data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
+                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
+                                  User_Count = noquote(input$useC)
+                                  )
+    )
     
   })
   
   # Random Forest
   output$rfPred <- renderPrint({
-    
+    tunegrid <- expand.grid(.mtry = c(3, 4, 5))
+    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + 
+                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                 data = trainData, method = "rf", preProcess = c("center", "scale"), tuneGrid = tunegrid)
+    predict(trainData, data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                  NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
+                                  Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS), 
+                                  Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), 
+                                  User_Count = noquote(input$useC)
+                                  )
+    )
   })
   
   # Download Functionality
