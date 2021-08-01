@@ -28,7 +28,7 @@ install.packages(c("shinydashboard",
                    "varhandle",
                    "ggcorrplot",
                    "caret",
-                   "e1071"
+                   "e1071",
                    "randomForest"))
 shiny::runGitHub("ST-558-Project-3", "kedumas", ref = "main")
 ```
