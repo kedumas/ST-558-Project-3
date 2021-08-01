@@ -13,8 +13,10 @@ tidyverse
 varhandle
 ggcorrplot
 caret
+e1071
+randomForest
 
-Easy installation:
+Easy installation and use:
 ```
 install.packages(c("shinydashboard",
                    "shinydashboardPlus",
@@ -25,7 +27,8 @@ install.packages(c("shinydashboard",
                    "tidyverse",
                    "varhandle",
                    "ggcorrplot",
-                   "caret"))
-```
-
+                   "caret",
+                   "e1071"
+                   "randomForest"))
 shiny::runGitHub("ST-558-Project-3", "kedumas", ref = "main")
+```
