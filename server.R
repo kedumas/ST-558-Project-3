@@ -6,10 +6,6 @@ library(ggcorrplot)
 library(plotly)
 library(caret)
 
-# Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
-# easily callable subsets of the variables and variable names. See helper.R for more information.
-#source("https://raw.githubusercontent.com/kedumas/ST-558-Project-3/main/helper.R")
-
 function(input, output, session) { 
   
   output$platTable <- renderTable(
@@ -186,12 +182,12 @@ function(input, output, session) {
     # Determine the position of the response name within allVars vector
     newResp <- Position(function(x) x == input$resp, allVars)
     # Update the checkboxes by removing the selected response variable as identified by Position()
-    if(input$resp != "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[3])}
+    if(input$resp != "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[c(3, 6, 11)])}
   })
 
   observe({
-    # Update the checkboxes if the user reselected NA_Sales
-    if(input$resp == "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -15)], selected = allVars[3])}
+    # Update the checkboxes if the user reselects Rating
+    if(input$resp == "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -15)], selected = allVars[c(3, 6, 11)])}
   })
   
   trainIndex <- reactive({

@@ -4,6 +4,8 @@ library(DT)
 library(plotly)
 library(shinycssloaders)
 
+# Static code is in the helper.R file. This includes reading in the initial data set and cleaning and also 
+# easily callable subsets of the variables and variable names. See helper.R for more information.
 source("helper.R")
 
 fluidPage(dashboardPage(
@@ -232,7 +234,7 @@ fluidPage(dashboardPage(
                                                                  actionButton("run", "Run Models"),
                                                                  selectInput("resp", "Response Variable", choices = barVars[-2], selected = barVars[4]),
                                                                  checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:14)], 
-                                                                                    selected = allVars[3]),
+                                                                                    selected = allVars[c(3, 6, 11)]),
                                                                  selectInput("cv", "Please select a Cross Validation method", choices = 
                                                                                  c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
                                                                  sliderInput("cvNum", "Number of folds", min = 3, max = 20, value = 10, step = 1),
