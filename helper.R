@@ -20,6 +20,8 @@ games <- games[games$Platform != "DC",]
 
 # Removing the N/A values for the release year
 games <- games %>% filter(str_detect(Year_of_Release, "2"))
+# Collected the unique values for he year of release in order. To be used with the other u_ variables
+uYear <- unique(games$Year_of_Release) %>% sort() %>% factor()
 
 # Removing all but the top 15 publishers
 obs <- table(games$Publisher)
@@ -28,6 +30,7 @@ games <- games[games$Publisher %in% names(obs[obs > 130]),]
 # Converted the correct columns to factors
 facts <- c("Platform", "Year_of_Release", "Genre", "Publisher", "Rating")
 games[facts] <- lapply(games[facts], factor)
+
 
 # One column was in list form and designated as character data, while it is actually numeric information.
 User_Score <- as.numeric(unlist(games["User_Score"]))
@@ -44,21 +47,9 @@ barVars <- games %>% select(where(is.factor), -Publisher) %>% colnames()
 
 # Unique values of selected variables for use in selectInput in ui.R
 uPlat <- unique(games$Platform)
-uYear <- unique(games$Year_of_Release)
 uPubl <- unique(games$Publisher)
 uGenr <- unique(games$Genre)
 uRatg <- unique(games$Rating)
 
 # Types of plots
 dataInputs <- c("Summary Statistics", "Correlation Plot", "Barplot", "Violin Plot", "Scatterplot")
-
-# # Full training models for prediction tab
-# mlr <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-#                       JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-#                     data = games, method = "multinom", trace = FALSE)
-# tree <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-#                        JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-#                      data = games, method = "rpart", preProcess = c("center", "scale"))
-# rFor <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-#                        JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-#                      data = games, method = "rf", preProcess = c("center", "scale"), tuneGrid =expand.grid(.mtry = 3))

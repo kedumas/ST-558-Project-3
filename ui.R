@@ -119,7 +119,7 @@ fluidPage(dashboardPage(
                             
                             # Options for filtering
                             selectInput("filtBar", "Filter Observations", choices = 
-                                            list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                            list("No Filter" = "No Filter", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                  "Rating" = uRatg)),
                             selectInput("facts", "Select the Variable of interest for the Barplot", choices = barVars, selected = barVars[2]),
                             plotOutput("bar", width = "100%")
@@ -132,10 +132,10 @@ fluidPage(dashboardPage(
                             fluidRow(box(
                                 # Options for filtering
                                 selectInput("filtVio", "Filter Observations", choices = 
-                                                list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                list("No Filter" = "No Filter", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Rating" = uRatg)), width = 4),
-                                box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[1]), width = 4),
-                                box(selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[1]), width = 4),
+                                box(selectInput("xVio", "Select the 'X' variable", choices = barVars, selected = barVars[4]), width = 4),
+                                box(selectInput("yVio", "Select the 'Y' variable", choices = numVars, selected = numVars[7]), width = 4),
                                 box(plotOutput("violin"), width = 12)
                             )
                         ),
@@ -148,7 +148,7 @@ fluidPage(dashboardPage(
                             fluidRow(box(
                                 # Options for filtering
                                 selectInput("filtSca", "Filter Observations", choices = 
-                                                list("No Filter" = " ", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
+                                                list("No Filter" = "No Filter", "Platform" = uPlat, "Year" = uYear, "Genre" = uGenr, "Publisher" = uPubl,
                                                      "Rating" = uRatg)), width = 4),
                                 box(selectInput("xSca", "Select the 'X' variable", choices = numVars, selected = numVars[1]), width = 4),
                                 box(selectInput("ySca", "Select the 'Y' variable", choices = numVars, selected = numVars[7]), width = 4),
@@ -234,13 +234,13 @@ fluidPage(dashboardPage(
                                                                  actionButton("run", "Run Models"),
                                                                  selectInput("resp", "Response Variable", choices = barVars[-2], selected = barVars[4]),
                                                                  checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:14)], 
-                                                                                    selected = allVars[c(3, 6, 11)]),
-                                                                 selectInput("cv", "Please select a Cross Validation method", choices = 
+                                                                                    selected = allVars[c(3, 4, 11)]),
+                                                                 selectInput("cv", "Please Select a Cross Validation Method", choices = 
                                                                                  c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
-                                                                 sliderInput("cvNum", "Number of folds", min = 3, max = 20, value = 10, step = 1),
-                                                                 selectInput("cvRep", "Number of repeats", choices = c(1, 2, 3, 4, 5, 6)),
-                                                                 selectInput("mtryNum", "Number of variables to try for Random Forest", choices = 1:14, 
-                                                                             selected = 3),
+                                                                 sliderInput("cvNum", "Number of Folds", min = 3, max = 20, value = 10, step = 1),
+                                                                 selectInput("cvRep", "Number of Repeats for Repeated CV", choices = c(1, 2, 3, 4, 5, 6)),
+                                                                 selectInput("mtryNum", "Number of Variables to Try for Random Forest", choices = 2:14, 
+                                                                             selected = 2),
                                                                  )
                                                              ),
                                                       column(8,
@@ -263,20 +263,23 @@ fluidPage(dashboardPage(
                                              h3("Prediction for Video Game Rating"),
                                              p("Global Sales is omitted from this as it is the sum of all other sales data and is highly correlated to them."),
                                              selectInput("predMod", "Prediction Model", choices = c("Multinomial Logistic Regression", "Classification Tree", "Random Forest")),
+                                             p("To predict a response based on the model described in the Model Fitting Tab, please select that in the 'Model' dropdown below,", 
+                                               "else the full model will be fit and predicted on."),
+                                             selectInput("modPref", "Model", choices = c("Model Fitting Tab", "Full Model"), selected = "Full Model"),
                                              actionButton("predButton", "Predict!"),
                                              br(),
                                              fluidRow(
                                                  column(3,
-                                                        selectInput("plat", "Platform", choices = uPlat)
+                                                        selectInput("plat", "Platform", choices = uPlat, selected = uPlat[9])
                                                  ),
                                                  column(3,
-                                                        selectInput("year", "Year_of_Release", choices = uYear)
+                                                        selectInput("year", "Year_of_Release", choices = uYear, selected = uYear[1])
                                                  ),
                                                  column(3,
-                                                        selectInput("genre", "Genre", choices = uGenr)
+                                                        selectInput("genre", "Genre", choices = uGenr, selected = uGenr[8])
                                                  ),
                                                  column(3,
-                                                        selectInput("publ", "Publisher", choices = uPubl)
+                                                        selectInput("publ", "Publisher", choices = uPubl, selected = uPubl[8])
                                                  )
                                              ),
                                              fluidRow(
@@ -316,18 +319,21 @@ fluidPage(dashboardPage(
                                              
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Multinomial Logistic Regression'",
-                                                 withSpinner(verbatimTextOutput("mlrPred"))
+                                                 withSpinner(verbatimTextOutput("mlrPred"), 
+                                                             proxy.height = "100px")
                                                  
                                              ),
                                              
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Classification Tree'",
-                                                 withSpinner(verbatimTextOutput("classPred"))
+                                                 withSpinner(verbatimTextOutput("classPred"), 
+                                                             proxy.height = "100px")
                                              ),
 
                                              conditionalPanel(
                                                  condition = "input.predMod == 'Random Forest'",
-                                                 withSpinner(verbatimTextOutput("rfPred"))
+                                                 withSpinner(verbatimTextOutput("rfPred"), 
+                                                             proxy.height = "100px")
                                              )
                                     )
                         )

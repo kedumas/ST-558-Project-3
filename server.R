@@ -5,15 +5,16 @@ library(varhandle)
 library(ggcorrplot)
 library(plotly)
 library(caret)
+library(e1071)
 library(randomForest)
 
 function(input, output, session) { 
   
   output$platTable <- renderTable(
-    data.frame("Platform" = uPlat, 
-               "Description" = c("Nintendo Wii", "Nintendo DS", "Xbox 360", "Playstation 3", "Playstation 2", "Nintendo 3DS", 
-                                      "Playstation 4", "Xbox", "Personal Computer", "Playstation Portable", "Nintendo WiiU", 
-                                      "Nintendo GameCube", "Nintendo Gameboy Advance", "Xbox One", "Playstation", "Playstation Vita"))
+    data.frame("Platform" = c("Wii", "WiiU", "DS", "3DS", "GC", "GBA", "XB", "X360", "XOne", "PS", "PS2", "PS3", "PS4", "PSP", "PSV", "PC"), 
+               "Description" = c("Nintendo Wii", "Nintendo WiiU", "Nintendo DS", "Nintendo 3DS", "Nintendo GameCube", "Nintendo Gameboy Advance",
+                                 "Xbox", "Xbox 360", "Xbox One", "Playstation", "Playstation 2", "Playstation 3", "Playstation 4",
+                                  "Playstation Portable", "Playstation Vita", "Personal Computer"))
   )
   output$rateTable <- renderTable(
     data.frame("Ratings" = c("E", "E10+", "T", "M"), 
@@ -74,7 +75,7 @@ function(input, output, session) {
   
   # Created filter if else flows to determine filtering for bar, violin and scatterplots.
   bGames <- reactive({
-    if(input$filtBar == " ") {bGames <- games
+    if(input$filtBar == "No Filter") {bGames <- games
     } else if(input$filtBar %in% games$Platform) {bGames <- games %>% filter(Platform == input$filtBar)
     } else if(input$filtBar %in% games$Year_of_Release) {bGames <- games %>% filter(Year_of_Release == input$filtBar) 
     } else if(input$filtBar %in% games$Genre) {bGames <- games %>% filter(Genre == input$filtBar)
@@ -84,7 +85,7 @@ function(input, output, session) {
   })
   
   vGames <- reactive({
-    if(input$filtVio == " ") {vGames <- games
+    if(input$filtVio == "No Filter") {vGames <- games
     } else if(input$filtVio %in% games$Platform) {vGames <- games %>% filter(Platform == input$filtVio)
     } else if(input$filtVio %in% games$Year_of_Release) {vGames <- games %>% filter(Year_of_Release == input$filtVio) 
     } else if(input$filtVio %in% games$Genre) {vGames <- games %>% filter(Genre == input$filtVio)
@@ -94,7 +95,7 @@ function(input, output, session) {
   })
   
   sGames <- reactive({
-    if(input$filtSca == " ") {sGames <- games
+    if(input$filtSca == "No Filter") {sGames <- games
     } else if(input$filtSca %in% games$Platform) {sGames <- games %>% filter(Platform == input$filtSca)
     } else if(input$filtSca %in% games$Year_of_Release) {sGames <- games %>% filter(Year_of_Release == input$filtSca) 
     } else if(input$filtSca %in% games$Genre) {sGames <- games %>% filter(Genre == input$filtSca)
@@ -104,10 +105,14 @@ function(input, output, session) {
   })
   
   # Barplot of a single variable. Looking only at Platform, Year of Release, Genre, and Rating. Default is Platform.
+  barTitle <- reactive({
+    paste0("Filter selected: ", input$filtBar)
+    })
   bar <- reactive({
     games <- bGames()
     ggplot(games, aes_string(input$facts)) + geom_bar(aes_string(fill = input$facts)) + coord_flip() +
-      theme_minimal() + stat_count(aes(label = ..count..), hjust = 1, geom = "text", position = "identity")
+      theme_minimal() + stat_count(aes(label = ..count..), hjust = 1, geom = "text", position = "identity") +
+      ggtitle(req(barTitle()))
   })
   output$bar <- renderPlot({
     bar()
@@ -115,9 +120,13 @@ function(input, output, session) {
 
   # Violin plot looking at the same variables as the barplot compared to all the numeric variables. 
   # Default is Platform by NA_Sales.
+  vioTitle <- reactive({
+    paste0("Filter selected: ", input$filtVio)
+  })
   vioPlot <- reactive({
     games <- vGames()
-    ggplot(games, aes_string(x = input$xVio, y = input$yVio)) + geom_violin() + coord_flip() + theme_minimal()
+    ggplot(games, aes_string(x = input$xVio, y = input$yVio, fill = input$xVio)) + geom_violin() + 
+      geom_boxplot(width=0.1, fill="white")+ coord_flip() + theme_minimal() + ggtitle(req(vioTitle()))
   })
   
   output$violin <- renderPlot({
@@ -126,10 +135,14 @@ function(input, output, session) {
   
   # Scatterplot looking at all the numeric variables compared to each other pairwise as the user specifies. 
   # Default is NA_Sales by Critic_Count.
+  scaTitle <- reactive({
+    paste0("Filter selected: ", input$filtSca)
+  })
   scatPlot <- reactive({
     games <- sGames()
     # Ggplot for a scatterplot is fit, then converted to plotly for interactivity.
-    p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal()
+    p <- ggplot(games, aes_string(input$xSca, input$ySca, label = c("Name"))) + geom_point() + theme_minimal() +
+      ggtitle(req(scaTitle()))
     ggplotly(p, tooltip = c("x", "y", "label"))
   })
   
@@ -183,12 +196,12 @@ function(input, output, session) {
     # Determine the position of the response name within allVars vector
     newResp <- Position(function(x) x == input$resp, allVars)
     # Update the checkboxes by removing the selected response variable as identified by Position()
-    if(input$resp != "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[c(3, 6, 11)])}
+    if(input$resp != "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[c(3, 4, 11)])}
   })
 
   observe({
     # Update the checkboxes if the user reselects Rating
-    if(input$resp == "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -15)], selected = allVars[c(3, 6, 11)])}
+    if(input$resp == "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -15)], selected = allVars[c(3, 4, 11)])}
   })
   
   trainIndex <- reactive({
@@ -228,7 +241,7 @@ function(input, output, session) {
     postResample(pred, obs = testObs)
   })
 
-  # Regression Tree
+  # Classification Tree
   tree <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
@@ -269,26 +282,44 @@ function(input, output, session) {
   
   # Prediction
   # Determining which model to fit
+  # Fitting full model so they're not refit each time a new selection is made
+  mlrFull <- reactive({
+    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + JP_Sales + 
+                   Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count, data = train(), 
+                 method = "multinom", trace = FALSE)
+  })
+  treeFull <- reactive({ 
+    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                 data = train(), method = "rpart", preProcess = c("center", "scale"))
+  })  
+  rfFull <- reactive({
+    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+                 data = train(), method = "rf", preProcess = c("center", "scale"), tuneGrid = expand.grid(.mtry = 3))
+  })  
+  
+  # if else flow to determine which model to use in the prediction
   trainData <- eventReactive(input$predButton, {
-    if(input$predMod == "Multinomial Logistic Regression"){
-        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                                  data = train(), method = "multinom", trace = FALSE)
-    } else if(input$predMod == "Classification Tree"){
-        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                                  data = train(), method = "rpart", preProcess = c("center", "scale"))
-    } else
-        trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-                                    JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                                  data = train(), method = "rf", preProcess = c("center", "scale"), tuneGrid = expand.grid(.mtry = 3))
+    if(input$modPref == "Model Fitting Tab" && input$predMod == "Multinomial Logistic Regression"){
+        trainData <- mlr()
+    } else if(input$modPref == "Model Fitting Tab" && input$predMod == "Classification Tree"){
+      trainData <- tree()
+    } else if(input$modPref == "Model Fitting Tab" && input$predMod == "Random Forest"){
+      trainData <- rForest()
+    } else if(input$modPref == "Full Model" && input$predMod == "Multinomial Logistic Regression"){
+        trainData <- mlrFull()
+    } else if(input$modPref == "Full Model" && input$predMod == "Classification Tree"){
+        trainData <- treeFull()
+    } else trainData <- rfFull()
+    
     trainData
   })
   
   # Adding message for Random Forest Time
   observeEvent(
     input$predButton, 
-    if(input$predMod == "Random Forest"){
+    if(input$modPref == "Full Model" && input$predMod == "Random Forest"){
       {showNotification("Fitting and predicting with Random Forest may take up to 5 minutes. Please have patience.",
                         type = "warning", duration = 5)}
     }
