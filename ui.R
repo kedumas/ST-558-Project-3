@@ -88,7 +88,7 @@ fluidPage(dashboardPage(
                         
                         # Action button to save desired plots
                         conditionalPanel(
-                            condition = "input.plotSum != 'Summary Statistics'",
+                            condition = "input.plotSum != 'Summary Statistics' & input.plotSum != 'Scatterplot'",
                             downloadButton("savePlotSum", "Download")
                         ),
                         
@@ -143,6 +143,7 @@ fluidPage(dashboardPage(
                         # Scatterplot
                         conditionalPanel(
                             condition = "input.plotSum == 'Scatterplot'",
+                            p("Please use the plotly download button to save a png of the plot."),
                             h3("Scatterplot"),
                             fluidRow(box(
                                 # Options for filtering
@@ -177,8 +178,9 @@ fluidPage(dashboardPage(
                         # Output: Tabset with modeling information, fitting and prediction
                         tabsetPanel(type = "tabs",
                                     tabPanel("Modeling Info", 
+                                             br(),
+                                             p("We're utilizing the caret package to fit all models."),
                                              h2("Multinominal Logistic Regression"),
-                                             p("We're utilizing the caret package to fit a multinomial logistic regression model."),
                                              h3("Benefits"),
                                              p("Multinomial Logistic Regression in used for data with non-ordered categorical responses.", 
                                                "It is a type of generalized linear model and is an extention to the Logistic Regression model and works when ", 
@@ -186,7 +188,6 @@ fluidPage(dashboardPage(
                                                ""),
                                              h3("Model"),
                                              withMathJax(helpText("$$f(k,i)=\\beta_{(0,k)}+\\beta_{(1,k)}\ x_{(1,i)}+\\beta_{(2,k)}\ x_{(2,i)}+\\cdots+\\beta_{(M,k)}\ x_{(M,i)}$$")),
-                                             #p("Where f(k,i) is the linear predition function, $$\\beta_{(m,k)}$$ is the regression coefficient of the $$m^{th}$$ predictor variables and k is "),
                                              h3("Probability of being in a Group"),
                                              withMathJax(helpText("$$Pr(Y_i=c)=\\frac{e^{\\beta_c\ X_i}}{\\sum_{k=1}^K\ e^{\\beta_c\ X_i}}$$")),
                                              h3("Drawbacks"),
@@ -194,7 +195,6 @@ fluidPage(dashboardPage(
                                                "data is doesn't necessarily have this linear relationship. Becasue of this, the model may not be the best ", 
                                                "fit for the data, or may give misleading results."),
                                              h2("Classification Tree Model"),
-                                             p("We're utilizing the caret package to fit a classification tree."),
                                              h3("Model"),
                                              h3("Benefits"),
                                              p("With tree based models, there is no assumption of linearity or other relationships. This allows for a",
@@ -211,11 +211,11 @@ fluidPage(dashboardPage(
                                                "this seed. This reduces variablility between the data splits for building the tree. It may also be a lot",
                                                "easier to overfit, this is where pruning comes into play."),
                                              h2("Random Forest"),
-                                             p("We are utilizing the caret package to fit a random forest."),
                                              h3("Benefits"),
-                                             p("Test words!"),
+                                             p("Random forest is a type of bootstrap aggregated tree model. Many, many trees are fit then aggregated. These trees will have a much lower ",
+                                               "correlation to one another because of how the splits are produced. Only m predictors are used per split."),
                                              h3("m Predictors"),
-                                             p("Random forest is a type of aggregated tree model where the number of candidate predictors per split is m. Bagging is a special",
+                                             p("To use random forest, the total number of predictors, p, is reduced to the number of candidate predictors per split, m. Bagging is a special",
                                                "case in that m equals the total number of p predictors. Below we can see the rule of thumb for m when doing classification with random forest."),
                                              withMathJax(helpText("$$m \\approx\ \\sqrt{p} $$")),
                                              h3("Drawbacks"),

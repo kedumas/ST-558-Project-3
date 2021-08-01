@@ -51,3 +51,14 @@ uRatg <- unique(games$Rating)
 
 # Types of plots
 dataInputs <- c("Summary Statistics", "Correlation Plot", "Barplot", "Violin Plot", "Scatterplot")
+
+# # Full training models for prediction tab
+# mlr <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+#                       JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+#                     data = games, method = "multinom", trace = FALSE)
+# tree <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+#                        JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+#                      data = games, method = "rpart", preProcess = c("center", "scale"))
+# rFor <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
+#                        JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
+#                      data = games, method = "rf", preProcess = c("center", "scale"), tuneGrid =expand.grid(.mtry = 3))
