@@ -251,7 +251,7 @@ function(input, output, session) {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
     tunegrid <- expand.grid(.mtry = as.numeric(noquote(input$mtryNum)))
-    caret::train(form, data = trainData, method = "rf", preProcess = c("center", "scale"), tuneGrid = tunegrid)
+    caret::train(form, data = trainData, method = "treebag", preProcess = c("center", "scale"))#, tuneGrid = tunegrid)
   })
 
   output$randForest <- renderPrint({
@@ -280,8 +280,7 @@ function(input, output, session) {
     } else
         trainData <- caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
                                     JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                                  data = train(), method = "rf", preProcess = c("center", "scale"), tuneGrid =
-                                    expand.grid(.mtry = 4))
+                                  data = train(), method = "treebag", preProcess = c("center", "scale"))#, tuneGrid =expand.grid(.mtry = 4))
     trainData
   })
   
