@@ -283,18 +283,22 @@ function(input, output, session) {
   })
   
   # Prediction
+  # Determining position of response variable to ignore on predictor variable side
+  newReg <- reactive({
+    newReg <- Position(function(x) x == input$regResp, allVars)
+  })
   # Determining which model to fit
   # Fitting full model so they're not refit each time a new selection is made
   mlrFull <- reactive({
-    form <- reformulate(allVars[-1], input$regResp)
+    form <- reformulate(allVars[-c(1, as.numeric(newReg()))], input$regResp)
     caret::train(form, data = train(), method = "lm", preProcess = c("center", "scale"))
   })
   treeFull <- reactive({ 
-    form <- reformulate(allVars[-1], input$regResp)
+    form <- reformulate(allVars[-c(1, as.numeric(newReg()))], input$regResp)
     caret::train(form, data = train(), method = "rpart", preProcess = c("center", "scale"))
   })  
   rfFull <- reactive({
-    form <- reformulate(allVars[-1], input$regResp)
+    form <- reformulate(allVars[-c(1, as.numeric(newReg()))], input$regResp)
     caret::train(form, data = train(), method = "ranger", preProcess = c("center", "scale"))
   })  
   
