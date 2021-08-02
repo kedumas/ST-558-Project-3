@@ -6,7 +6,7 @@ library(ggcorrplot)
 library(plotly)
 library(caret)
 library(e1071)
-library(randomForest)
+library(ranger)
 
 function(input, output, session) { 
   
@@ -323,37 +323,64 @@ function(input, output, session) {
                         type = "warning", duration = 5)}
     }
   )
+  
+  predInds <- reactive({
+    if(input$regResp == "NA_Sales"){
+      # All Independent variables minus NA_Sales
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal), Other_Sales = noquote(input$otSal), 
+                             Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else if(input$regResp == "EU_Sales"){
+      # All but EU_Sales
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             NA_Sales = noquote(input$naSal), JP_Sales = noquote(input$jpSal), Other_Sales = noquote(input$otSal), 
+                             Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else if(input$regResp == "JP_Sales"){
+      # All but JP_Sales
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             EU_Sales = noquote(input$euSal), NA_Sales = noquote(input$naSal), Other_Sales = noquote(input$otSal), 
+                             Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else if(input$regResp == "Other_Sales"){
+      # All but Other_Sales
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal), NA_Sales = noquote(input$naSal), 
+                             Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else if(input$regResp == "Global_Sales"){
+      # All but Global_Sales
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal), Other_Sales = noquote(input$otSal), 
+                             NA_Sales = noquote(input$naSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else if(input$regResp == "Critic_Score"){
+      # All but Critic_Score
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                             EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal), Other_Sales = noquote(input$otSal), 
+                             Global_Sales = noquote(input$glSal), NA_Sales = noquote(input$naSal), Critic_Count = noquote(input$critC), 
+                             User_Score = noquote(input$useS), User_Count = noquote(input$useC), Rating = input$ratg)
+    } else # All but User_Score
+      predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
+                                  EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal), Other_Sales = noquote(input$otSal), 
+                                  Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS), Critic_Count = noquote(input$critC), 
+                                  NA_Sales = noquote(input$naSal), User_Count = noquote(input$useC), Rating = input$ratg)
+    predInds
+  })
 
-  # Predicting Multinomial Logistic Regression
+  # Predicting Multiple Linear Regression
   output$mlrPred <- renderPrint({
-    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
-                                    Rating = input$ratg
-                                    )
-    )
+    predict(trainData(), predInds())
   })
 
   # Predicting Classification Tree
   output$regPred <- renderPrint({
-    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
-                                    Rating = input$ratg
-                                    )
-    )
+    predict(trainData(), predInds())
   })
 
   # Predicting Random Forest
   output$rfPred <- renderPrint({
-    predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
-                                    NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
-                                    Rating = input$ratg
-                                    )
-    )
+    predict(trainData(), predInds())
   })
 }

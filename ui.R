@@ -237,11 +237,12 @@ fluidPage(dashboardPage(
                                                                  sliderInput("cvNum", "Number of Folds", min = 3, max = 20, value = 10, step = 1),
                                                                  selectInput("cvRep", "Number of Repeats for Repeated CV", choices = c(1, 2, 3, 4, 5, 6)),
                                                                  p("Regression Tree Tuning"),
-                                                                 selectInput("cp", "Complexity Parameter", choices = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1)),
+                                                                 selectizeInput("cp", "Complexity Parameter", choices = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1),
+                                                                                multiple = TRUE),
                                                                  p("Random Forest Tuning"),
-                                                                 selectInput("mtryNum", "Number of Variables to Try", choices = 2:14, selected = 2),
-                                                                 selectInput("sRule", "SplitRule", choices = c("variance", "extratrees")),
-                                                                 selectInput("minNode", "Minimum Node Size", choices = c(4, 5, 6))
+                                                                 selectizeInput("mtryNum", "Number of Variables to Try", choices = 2:14, selected = 2, multiple = TRUE),
+                                                                 selectizeInput("sRule", "SplitRule", choices = c("variance", "extratrees"), multiple = TRUE),
+                                                                 selectizeInput("minNode", "Minimum Node Size", choices = c(4, 5, 6), multiple = TRUE)
                                                                  )
                                                              ),
                                                       column(8,
