@@ -276,7 +276,10 @@ function(input, output, session) {
   tree <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+    suppressWarnings(caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control()))
+    # There is a known warning, and it stems from not having a very good split for the data when fitting a regression tree:
+    # Warning in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo,  :
+    # There were missing values in resampled performance measures.
   })
   
   output$regTree <- renderPrint({
@@ -359,7 +362,7 @@ function(input, output, session) {
     }
   )
   
-  predInds <- reactive({
+  predInds <- eventReactive(input$predButton, {
     if(input$regResp == "NA_Sales"){
       # All Independent variables minus NA_Sales
       predInds <- data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
