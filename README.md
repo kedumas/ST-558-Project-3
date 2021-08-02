@@ -14,7 +14,7 @@ varhandle
 ggcorrplot
 caret
 e1071
-randomForest
+ranger
 
 Easy installation and use:
 ```
@@ -29,6 +29,6 @@ install.packages(c("shinydashboard",
                    "ggcorrplot",
                    "caret",
                    "e1071",
-                   "randomForest"))
+                   "ranger"))
 shiny::runGitHub("ST-558-Project-3", "kedumas", ref = "main")
 ```
