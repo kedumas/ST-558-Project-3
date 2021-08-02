@@ -41,7 +41,7 @@ fluidPage(dashboardPage(
                           "Global sales is the sum of all the rest of the sales data, critic scores are 1-100 while user scores are 1.0-10.0. The user and critic counts",
                           "are the number of scores given. The original dataset contained 16,719 observations. This number has been reduced by removing observations that fall into", 
                           "categories with less than 10 observations total. Further, only the top 15 game publishers are included in this dataset. Through this", 
-                          "reduction there are now 4,622 different observations in this set for games that rangethe gambit of genres. Two tables below show", 
+                          "reduction there are now 4,622 different observations in this set for games that range the gambit of genres. Two tables below show", 
                           "the short hand and long form of the variables Platform, which is the hardware the game was designed to run on, and the game's Rating."),
                         tableOutput("platTable"),
                         tableOutput("rateTable"),
@@ -180,12 +180,11 @@ fluidPage(dashboardPage(
                                     tabPanel("Modeling Info", 
                                              br(),
                                              p("We're utilizing the caret package to fit all models."),
-                                             h2("Multinominal Logistic Regression"),
+                                             h2("Multiple Linear Regression"),
+                                             p("Method in caret: lm"),
                                              h3("Benefits"),
-                                             p("Multinomial Logistic Regression in used for data with non-ordered categorical responses.", 
-                                               "It is a type of generalized linear model and is an extention to the Logistic Regression model and works when ", 
-                                               "there are more than two factor levels.",
-                                               ""),
+                                             p("Multiple Linear Regression is used for data with a continuous response. This type of model assumes that there is a linear relationship",
+                                               "between the response and predictors."),
                                              h3("Model"),
                                              withMathJax(helpText("$$f(k,i)=\\beta_{(0,k)}+\\beta_{(1,k)}\ x_{(1,i)}+\\beta_{(2,k)}\ x_{(2,i)}+\\cdots+\\beta_{(M,k)}\ x_{(M,i)}$$")),
                                              h3("Probability of being in a Group"),
@@ -195,6 +194,7 @@ fluidPage(dashboardPage(
                                                "data is doesn't necessarily have this linear relationship. Becasue of this, the model may not be the best ", 
                                                "fit for the data, or may give misleading results."),
                                              h2("Classification Tree Model"),
+                                             p("Method in caret: rpart"),
                                              h3("Model"),
                                              h3("Benefits"),
                                              p("With tree based models, there is no assumption of linearity or other relationships. This allows for a",
@@ -211,19 +211,16 @@ fluidPage(dashboardPage(
                                                "this seed. This reduces variablility between the data splits for building the tree. It may also be a lot",
                                                "easier to overfit, this is where pruning comes into play."),
                                              h2("Random Forest"),
+                                             p("Method in caret: ranger"),
                                              h3("Benefits"),
                                              p("Random forest is a type of bootstrap aggregated tree model. Many, many trees are fit then aggregated. These trees will have a much lower ",
                                                "correlation to one another because of how the splits are produced. Only m predictors are used per split."),
                                              h3("m Predictors"),
                                              p("To use random forest, the total number of predictors, p, is reduced to the number of candidate predictors per split, m. Bagging is a special",
-                                               "case in that m equals the total number of p predictors. Below we can see the rule of thumb for m when doing classification with random forest."),
-                                             withMathJax(helpText("$$m \\approx\ \\sqrt{p} $$")),
+                                               "case in that m equals the total number of p predictors. Below we can see the rule of thumb for m when doing regression with random forest."),
+                                             withMathJax(helpText("$$m \\approx\ \\frac{p}{3} $$")),
                                              h3("Drawbacks"),
-                                             p("Fitting a Random Forest can be very slow! There are over 4000 observations in this dataset ",
-                                               "and so we reduce the time to fit the model by letting the user choose a specific number for the mtry ",
-                                               "tuning parameter. Further, there is a large delay when fitting the full model for prediction.",
-                                               "Another drawback is that the aggregated tree nature of random forest looses interpretability and ",
-                                               "is best used when one wants to predict and not infer.")
+                                             p("The biggest drawback of any aggregated tree method is the loss interpretability and is best used when one wants to predict and not infer.")
                                              ),
                                     tabPanel("Model Fitting", 
                                              h2(),
@@ -232,77 +229,98 @@ fluidPage(dashboardPage(
                                                                  sliderInput("split", "Percentage of Data for the Training Set", min = 50, 
                                                                              max = 85, value = 50, step = 1),
                                                                  actionButton("run", "Run Models"),
-                                                                 selectInput("resp", "Response Variable", choices = barVars[-2], selected = barVars[4]),
-                                                                 checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:14)], 
+                                                                 selectInput("resp", "Response Variable", choices = numVars[-2], selected = numVars[1]),
+                                                                 checkboxGroupInput("pred", "Predictor Variables", choices = allVars[c(2:5, 7:15)], 
                                                                                     selected = allVars[c(3, 4, 11)]),
                                                                  selectInput("cv", "Please Select a Cross Validation Method", choices = 
                                                                                  c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
                                                                  sliderInput("cvNum", "Number of Folds", min = 3, max = 20, value = 10, step = 1),
                                                                  selectInput("cvRep", "Number of Repeats for Repeated CV", choices = c(1, 2, 3, 4, 5, 6)),
-                                                                 selectInput("mtryNum", "Number of Variables to Try for Random Forest", choices = 2:14, 
-                                                                             selected = 2),
+                                                                 p("Regression Tree Tuning"),
+                                                                 selectInput("cp", "Complexity Parameter", choices = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1)),
+                                                                 p("Random Forest Tuning"),
+                                                                 selectInput("mtryNum", "Number of Variables to Try", choices = 2:14, selected = 2),
+                                                                 selectInput("sRule", "SplitRule", choices = c("variance", "extratrees")),
+                                                                 selectInput("minNode", "Minimum Node Size", choices = c(4, 5, 6))
                                                                  )
                                                              ),
                                                       column(8,
-                                                             h3("Multinomial Logistic Regression Model Fit Statistics"),
+                                                             h3("Multiple Linear Regression Model Fit Summary"),
                                                              verbatimTextOutput("mlrModel"),
-                                                             h3("Multinomial Logistic Regression Model Fit Error on Test Set"),
-                                                             verbatimTextOutput("mlrAcc"),
-                                                             h3("Classification Tree Fit"),
-                                                             verbatimTextOutput("classTree"),
-                                                             h3("Classification Tree Fit Error on Test Set"),
-                                                             verbatimTextOutput("treeAcc"),
-                                                             h3("Random Forest Fit"),
+                                                             h3("Multiple Linear Regression Model Fit Error on Test Set"),
+                                                             verbatimTextOutput("mlrErr"),
+                                                             h3("Regression Tree Fit Summary"),
+                                                             verbatimTextOutput("regTree"),
+                                                             h3("Regression Tree Fit Error on Test Set"),
+                                                             verbatimTextOutput("treeErr"),
+                                                             h3("Random Forest Fit Summary"),
                                                              verbatimTextOutput("randForest"),
                                                              h3("Random Forest Fit Error On Test Set"),
-                                                             withSpinner(verbatimTextOutput("rfAcc"))
+                                                             withSpinner(verbatimTextOutput("rfErr"))
                                                              )
                                              )
                                     ),
                                     tabPanel("Prediction", 
-                                             h3("Prediction for Video Game Rating"),
-                                             p("Global Sales is omitted from this as it is the sum of all other sales data and is highly correlated to them."),
-                                             selectInput("predMod", "Prediction Model", choices = c("Multinomial Logistic Regression", "Classification Tree", "Random Forest")),
+                                             h3("Prediction for Video Game"),
                                              p("To predict a response based on the model described in the Model Fitting Tab, please select that in the 'Model' dropdown below,", 
-                                               "else the full model will be fit and predicted on."),
-                                             selectInput("modPref", "Model", choices = c("Model Fitting Tab", "Full Model"), selected = "Full Model"),
-                                             actionButton("predButton", "Predict!"),
-                                             br(),
+                                               "else the full model will be fit and predicted on. The default tuning caret uses will be used in the full models."),
                                              fluidRow(
                                                  column(3,
-                                                        selectInput("plat", "Platform", choices = uPlat, selected = uPlat[9])
+                                                        selectInput("predMod", "Prediction Model", choices = c("Multiple Linear Regression", "Regression Tree", "Random Forest"))
                                                  ),
                                                  column(3,
-                                                        selectInput("year", "Year_of_Release", choices = uYear, selected = uYear[1])
+                                                        selectInput("modPref", "Model", choices = c("Model Fitting Tab", "Full Model"), selected = "Full Model")
                                                  ),
                                                  column(3,
-                                                        selectInput("genre", "Genre", choices = uGenr, selected = uGenr[8])
+                                                        selectInput("regResp", "Response to Predict", choices = numVars[c(-7, -9)], selected = numVars[1])
                                                  ),
                                                  column(3,
-                                                        selectInput("publ", "Publisher", choices = uPubl, selected = uPubl[8])
+                                                        actionButton("predButton", "Predict!")
                                                  )
                                              ),
+                                             br(),
+                                             p("Use the options below to input various options for prediction."),
                                              fluidRow(
-                                                 column(3,
-                                                        sliderInput("critS", "Critic Score", value = 50, min = 0, max = 100, step = 1)
+                                                 column(4,
+                                                        selectInput("plat", "Platform", choices = uPlat, selected = uPlat[9])
                                                  ),
+                                                 column(4,
+                                                        selectInput("year", "Year_of_Release", choices = uYear, selected = uYear[1])
+                                                 ),
+                                                 column(4,
+                                                        selectInput("genre", "Genre", choices = uGenr, selected = uGenr[8])
+                                                 )
+
+                                             ),
+                                             fluidRow(
+                                                 column(4,
+                                                        selectInput("publ", "Publisher", choices = uPubl, selected = uPubl[8])
+                                                 ),
+                                                 column(4,
+                                                        selectInput("ratg", "Rating", choices = uRatg, selected = uRatg[3])
+                                                 ),
+                                                 column(4,
+                                                        numericInput("critS", "Critic Score", value = 50, min = 0, max = 100, step = 1)
+                                                 ),
+                                             ),
+                                             fluidRow(
                                                  column(3,
                                                         numericInput("critC", "Critic Count", value = max(games$Critic_Count)/2, min = min(games$Critic_Count), 
                                                                      max = max(games$Critic_Count), step = 1)
                                                  ),
                                                  column(3,
-                                                        sliderInput("useS", "User Score", value = 5, min = 0, 10, step = 0.1)
+                                                        numericInput("useS", "User Score", value = 5, min = 0, max = 10, step = 0.1)
                                                  ),
                                                  column(3,
                                                         numericInput("useC", "User Count", value = 5000, min = min(games$User_Count), max = max(games$User_Count), 
                                                                      step = 1)
-                                                 )
-                                             ),
-                                             fluidRow(
+                                                 ),
                                                  column(3,
                                                         sliderInput("naSal", "North American Sales", value = max(games$NA_Sales)/2, min = 0, 
                                                                     max = max(games$NA_Sales), step = 0.01)
-                                                 ),
+                                                 )
+                                             ),
+                                             fluidRow(
                                                  column(3,
                                                         sliderInput("euSal", "European Sales", value = max(games$EU_Sales)/2, min = 0, 
                                                                     max = max(games$EU_Sales), step = 0.01)
@@ -315,18 +333,22 @@ fluidPage(dashboardPage(
                                                         sliderInput("otSal", "Other Sales", value = max(games$Other_Sales)/2, min = 0, 
                                                                     max = max(games$Other_Sales), step = 0.01)
                                                  ),
+                                                 column(3,
+                                                        sliderInput("glSal", "Global Sales", value = max(games$Global_Sales)/2, min = 0, 
+                                                                    max = max(games$Global_Sales), step = 0.01)
+                                                 )
                                              ),
                                              
                                              conditionalPanel(
-                                                 condition = "input.predMod == 'Multinomial Logistic Regression'",
+                                                 condition = "input.predMod == 'Multiple Linear Regression'",
                                                  withSpinner(verbatimTextOutput("mlrPred"), 
                                                              proxy.height = "100px")
                                                  
                                              ),
                                              
                                              conditionalPanel(
-                                                 condition = "input.predMod == 'Classification Tree'",
-                                                 withSpinner(verbatimTextOutput("classPred"), 
+                                                 condition = "input.predMod == 'Regression Tree'",
+                                                 withSpinner(verbatimTextOutput("regPred"), 
                                                              proxy.height = "100px")
                                              ),
 

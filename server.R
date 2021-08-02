@@ -196,12 +196,12 @@ function(input, output, session) {
     # Determine the position of the response name within allVars vector
     newResp <- Position(function(x) x == input$resp, allVars)
     # Update the checkboxes by removing the selected response variable as identified by Position()
-    if(input$resp != "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[c(3, 4, 11)])}
+    if(input$resp != "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -newResp)], selected = allVars[c(3, 4, 11)])}
   })
 
   observe({
-    # Update the checkboxes if the user reselects Rating
-    if(input$resp == "Rating"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -15)], selected = allVars[c(3, 4, 11)])}
+    # Update the checkboxes if the user reselects NA_Sales
+    if(input$resp == "NA_Sales"){updateCheckboxGroupInput(session, "pred", choices = allVars[c(-1, -6)], selected = allVars[c(3, 4, 11)])}
   })
   
   trainIndex <- reactive({
@@ -226,14 +226,14 @@ function(input, output, session) {
   mlr <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    caret::train(form, data = trainData, method = "multinom", trace = FALSE, trControl = control())
+    caret::train(form, data = trainData, method = "lm", preProcess = c("center", "scale"))
   })
   
   output$mlrModel <- renderPrint({
     summary(mlr())
   })
 
-  output$mlrAcc <- renderPrint({
+  output$mlrErr <- renderPrint({
     test <- test()
     resp <- Position(function(x) x == input$resp, allVars)
     testObs <- test[[resp]]
@@ -241,18 +241,19 @@ function(input, output, session) {
     postResample(pred, obs = testObs)
   })
 
-  # Classification Tree
+  # Regression Tree
   tree <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
+    tunegrid <- expand.grid(.cp = input$cp)
+    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), tuneGrid = tunegrid, trControl = control())
   })
   
-  output$classTree <- renderPrint({
+  output$regTree <- renderPrint({
     tree()
   })
 
-  output$treeAcc <- renderPrint({
+  output$treeErr <- renderPrint({
     test <- test()
     resp <- Position(function(x) x == input$resp, allVars)
     testObs <- test[[resp]]
@@ -264,15 +265,16 @@ function(input, output, session) {
   rForest <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    tunegrid <- expand.grid(.mtry = as.numeric(noquote(input$mtryNum)))
-    caret::train(form, data = trainData, method = "rf", preProcess = c("center", "scale"), tuneGrid = tunegrid)
+    tunegrid <- expand.grid(.mtry = as.numeric(noquote(input$mtryNum)), .splitrule = input$sRule, .min.node.size = as.numeric(noquote(input$minNode)))
+    # The ranger method is a speedy version of random forest based on the ranger function
+    caret::train(form, data = trainData, method = "ranger", preProcess = c("center", "scale"), tuneGrid = tunegrid)
   })
 
   output$randForest <- renderPrint({
     rForest()
   })
 
-  output$rfAcc <- renderPrint({
+  output$rfErr <- renderPrint({
     test <- test()
     resp <- Position(function(x) x == input$resp, allVars)
     testObs <- test[[resp]]
@@ -284,32 +286,29 @@ function(input, output, session) {
   # Determining which model to fit
   # Fitting full model so they're not refit each time a new selection is made
   mlrFull <- reactive({
-    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales + JP_Sales + 
-                   Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count, data = train(), 
-                 method = "multinom", trace = FALSE)
+    form <- reformulate(allVars[-1], input$regResp)
+    caret::train(form, data = train(), method = "lm", preProcess = c("center", "scale"))
   })
   treeFull <- reactive({ 
-    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                 data = train(), method = "rpart", preProcess = c("center", "scale"))
+    form <- reformulate(allVars[-1], input$regResp)
+    caret::train(form, data = train(), method = "rpart", preProcess = c("center", "scale"))
   })  
   rfFull <- reactive({
-    caret::train(Rating ~ Platform + Year_of_Release + Genre + Publisher + NA_Sales + EU_Sales +
-                   JP_Sales + Other_Sales + Critic_Score + Critic_Count + User_Score + User_Count,
-                 data = train(), method = "rf", preProcess = c("center", "scale"), tuneGrid = expand.grid(.mtry = 3))
+    form <- reformulate(allVars[-1], input$regResp)
+    caret::train(form, data = train(), method = "ranger", preProcess = c("center", "scale"))
   })  
   
   # if else flow to determine which model to use in the prediction
   trainData <- eventReactive(input$predButton, {
-    if(input$modPref == "Model Fitting Tab" && input$predMod == "Multinomial Logistic Regression"){
+    if(input$modPref == "Model Fitting Tab" && input$predMod == "Multiple Linear Regression"){
         trainData <- mlr()
-    } else if(input$modPref == "Model Fitting Tab" && input$predMod == "Classification Tree"){
+    } else if(input$modPref == "Model Fitting Tab" && input$predMod == "Regression Tree"){
       trainData <- tree()
     } else if(input$modPref == "Model Fitting Tab" && input$predMod == "Random Forest"){
       trainData <- rForest()
-    } else if(input$modPref == "Full Model" && input$predMod == "Multinomial Logistic Regression"){
+    } else if(input$modPref == "Full Model" && input$predMod == "Multiple Linear Regression"){
         trainData <- mlrFull()
-    } else if(input$modPref == "Full Model" && input$predMod == "Classification Tree"){
+    } else if(input$modPref == "Full Model" && input$predMod == "Regression Tree"){
         trainData <- treeFull()
     } else trainData <- rfFull()
     
@@ -329,20 +328,20 @@ function(input, output, session) {
   output$mlrPred <- renderPrint({
     predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
                                     NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
-                                    User_Count = noquote(input$useC)
+                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
+                                    Rating = input$ratg
                                     )
     )
   })
 
   # Predicting Classification Tree
-  output$classPred <- renderPrint({
+  output$regPred <- renderPrint({
     predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
                                     NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
-                                    User_Count = noquote(input$useC)
+                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
+                                    Rating = input$ratg
                                     )
     )
   })
@@ -351,9 +350,9 @@ function(input, output, session) {
   output$rfPred <- renderPrint({
     predict(trainData(), data.frame(Platform = input$plat, Year_of_Release = input$year, Genre = input$genre, Publisher = input$publ,
                                     NA_Sales = noquote(input$naSal), EU_Sales = noquote(input$euSal), JP_Sales = noquote(input$jpSal),
-                                    Other_Sales = noquote(input$otSal), Critic_Score = noquote(input$critS),
-                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS),
-                                    User_Count = noquote(input$useC)
+                                    Other_Sales = noquote(input$otSal), Global_Sales = noquote(input$glSal), Critic_Score = noquote(input$critS),
+                                    Critic_Count = noquote(input$critC), User_Score = noquote(input$useS), User_Count = noquote(input$useC), 
+                                    Rating = input$ratg
                                     )
     )
   })
