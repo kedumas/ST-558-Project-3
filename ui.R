@@ -96,8 +96,16 @@ fluidPage(dashboardPage(
                         conditionalPanel(
                             condition = "input.plotSum == 'Summary Statistics'", 
                             h3("Summary Statistics"),
-                            checkboxGroupInput("sumOpts", "Variables for the Summary Statistics", choices = allVars[-1], 
-                                               selected = allVars[-1], inline = TRUE),
+                            fluidRow(
+                                column(6,
+                                       selectizeInput("sumOpts", "Variables for the Summary Statistics", 
+                                                      choices = allVars[-c(1, 2, 4, 5, 15)], selected = allVars[-c(1, 2, 4, 5, 15)], multiple = TRUE),
+                                ),
+                                column(6,
+                                       selectInput("pickSum", "Summary", choices = c("Minimum and Maximum", "Quantiles", "Interquartile Range", "Mean and Median"),
+                                                   selected = "Minimum and Maximum")
+                                )
+                            ),
                             verbatimTextOutput("sumData")
                         ),
                         
@@ -170,11 +178,10 @@ fluidPage(dashboardPage(
                                  left: calc(25%);
                                  }"
                             )
-                        )
+                        ),
                     ),
                     h2("Modeling Content"),
                     mainPanel(
-                        
                         # Output: Tabset with modeling information, fitting and prediction
                         tabsetPanel(type = "tabs",
                                     tabPanel("Modeling Info", 
@@ -235,14 +242,11 @@ fluidPage(dashboardPage(
                                                                  selectInput("cv", "Please Select a Cross Validation Method", choices = 
                                                                                  c("Cross Validation" = "cv", "Repeated Cross Validation" = "repeatedcv")),
                                                                  sliderInput("cvNum", "Number of Folds", min = 3, max = 20, value = 10, step = 1),
-                                                                 selectInput("cvRep", "Number of Repeats for Repeated CV", choices = c(1, 2, 3, 4, 5, 6)),
-                                                                 p("Regression Tree Tuning"),
-                                                                 selectizeInput("cp", "Complexity Parameter", choices = c(0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1),
-                                                                                multiple = TRUE),
+                                                                 selectInput("cvRep", "Number of Repeats for Repeated CV", choices = c(2, 3, 4, 5, 6)),
                                                                  p("Random Forest Tuning"),
-                                                                 selectizeInput("mtryNum", "Number of Variables to Try", choices = 2:14, selected = 2, multiple = TRUE),
-                                                                 selectizeInput("sRule", "SplitRule", choices = c("variance", "extratrees"), multiple = TRUE),
-                                                                 selectizeInput("minNode", "Minimum Node Size", choices = c(4, 5, 6), multiple = TRUE)
+                                                                 selectizeInput("mtryNum", "Number of Variables to Try", choices = 2:67, selected = 7, multiple = TRUE),
+                                                                 selectizeInput("sRule", "SplitRule", choices = c("variance", "extratrees"), selected = "variance", multiple = TRUE),
+                                                                 selectizeInput("minNode", "Minimum Node Size", choices = c(4, 5, 6), selected = 5, multiple = TRUE)
                                                                  )
                                                              ),
                                                       column(8,

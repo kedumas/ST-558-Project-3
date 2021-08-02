@@ -53,15 +53,46 @@ function(input, output, session) {
   # Data Manipulation Page Setup
   # Summary data of the data set. Summary data shown can be selected by the user. Default is all variable 
   # summaries shown.
-  sums <- reactive({
-    sumVar <- input$sumOpts
+  gamesSum <- reactive({
     gamesSum <- games
     gamesSum$Year_of_Release <- unfactor(games$Year_of_Release)
-    gamesSum %>% select(all_of(sumVar)) %>% summary()
+    gamesSum
+  })
+  
+  minMax <- reactive({
+    sumVar <- input$sumOpts
+    summ <- gamesSum() %>% select(all_of(sumVar)) %>% summary()
+    summ[c(1,6),]
+  })
+  
+  sumQuants <- reactive({
+    sumVar <- input$sumOpts
+    listGames <- gamesSum() %>% select(all_of(sumVar))
+    quant <- sapply(listGames, quantile)
+    quant
+  })
+  
+  iqRange <- reactive({
+    sumVar <- input$sumOpts
+    listGames <- gamesSum() %>% select(all_of(sumVar))
+    interQR <- sapply(listGames, IQR)
+    data.frame(InterQuartileRange = interQR)
+  })
+  
+  meanMed <- reactive({
+    sumVar <- input$sumOpts
+    medMean <- gamesSum() %>% select(all_of(sumVar)) %>% summary()
+    medMean[c(3,4),]
   })
   
   output$sumData <- renderPrint({
-    sums()
+    if(input$pickSum == "Minimum and Maximum"){
+      minMax()
+    } else if(input$pickSum == "Quantiles"){
+      sumQuants()
+    } else if(input$pickSum == "Interquartile Range"){
+      iqRange()
+    } else meanMed()
   })
   
   # Correlation plot with inputs selected by the user. Default is all variables included.
@@ -245,8 +276,7 @@ function(input, output, session) {
   tree <- eventReactive(input$run, {
     trainData <- train()
     form <- reformulate(input$pred, input$resp)
-    tunegrid <- expand.grid(.cp = input$cp)
-    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), tuneGrid = tunegrid, trControl = control())
+    caret::train(form, data = trainData, method = "rpart", preProcess = c("center", "scale"), trControl = control())
   })
   
   output$regTree <- renderPrint({
@@ -267,7 +297,7 @@ function(input, output, session) {
     form <- reformulate(input$pred, input$resp)
     tunegrid <- expand.grid(.mtry = as.numeric(noquote(input$mtryNum)), .splitrule = input$sRule, .min.node.size = as.numeric(noquote(input$minNode)))
     # The ranger method is a speedy version of random forest based on the ranger function
-    caret::train(form, data = trainData, method = "ranger", preProcess = c("center", "scale"), tuneGrid = tunegrid)
+    caret::train(form, data = trainData, method = "ranger", preProcess = c("center", "scale"), trControl = control(), tuneGrid = tunegrid)
   })
 
   output$randForest <- renderPrint({
@@ -299,7 +329,8 @@ function(input, output, session) {
   })  
   rfFull <- reactive({
     form <- reformulate(allVars[-c(1, as.numeric(newReg()))], input$regResp)
-    caret::train(form, data = train(), method = "ranger", preProcess = c("center", "scale"))
+    tunegrid <- expand.grid(.mtry = 22, .splitrule = c("variance", "extratrees"), .min.node.size = 5)
+    caret::train(form, data = train(), method = "ranger", preProcess = c("center", "scale"), tuneGrid = tunegrid)
   })  
   
   # if else flow to determine which model to use in the prediction
@@ -323,7 +354,7 @@ function(input, output, session) {
   observeEvent(
     input$predButton, 
     if(input$modPref == "Full Model" && input$predMod == "Random Forest"){
-      {showNotification("Fitting and predicting with Random Forest may take up to 5 minutes. Please have patience.",
+      {showNotification("Fitting and predicting with Random Forest may take several minutes. Please have patience.",
                         type = "warning", duration = 5)}
     }
   )
